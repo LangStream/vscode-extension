@@ -1,0 +1,299 @@
+{
+  "name": "langstream",
+  "displayName": "LangStream",
+  "description": "Develop generative AI streams with LangStream",
+  "version": "0.1.0-alpha",
+  "publisher": "DataStax",
+  "engines": {
+    "vscode": "^1.77.0"
+  },
+  "categories": [
+    "Other",
+    "Snippets"
+  ],
+  "license": "Apache-2.0",
+  "keywords": [
+    "ai",
+    "generative ai",
+    "text processing",
+    "embedding",
+    "ai completions"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/datastax/langstream-vscode"
+  },
+  "icon": "images/AI-Logo.png",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "watch": "npx webpack-cli --watch",
+    "package": "npx webpack-cli --mode production --devtool hidden-source-map",
+    "compile": "npm run compile:ext",
+    "compile:ext": "npx webpack-cli --mode development",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts --fix",
+    "test:ext": "npm run compile-tests && node ./out/test/integration/runTest.js",
+    "test:unit": "node ./node_modules/mocha/bin/mocha --require ./src/test/unit/hooks.js",
+    "test": "npm run test:unit && npm run test:ext"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/sinon": "^10.0.15",
+    "@types/uuid": "^9.0.1",
+    "@types/vscode": "^1.77.0",
+    "@types/ws": "^8.5.4",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
+    "@vscode/extension-telemetry": "^0.8.0",
+    "@vscode/test-electron": "^2.3.0",
+    "axios": "^1.4.0",
+    "bufferutil": "^4.0.7",
+    "chai": "^4.3.7",
+    "crypto": "^1.0.1",
+    "css-loader": "^6.7.3",
+    "eslint": "^8.39.0",
+    "fflate": "^0.8.0",
+    "mocha": "^10.2.0",
+    "sinon": "^15.1.0",
+    "style-loader": "^3.3.2",
+    "terser-webpack-plugin": "^5.3.9",
+    "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4",
+    "utf-8-validate": "^6.0.0",
+    "webpack": "^5.81.0",
+    "webpack-cli": "^5.0.2",
+    "ws": "^8.13.0",
+    "yaml": "^2.3.1"
+  },
+  "contributes": {
+    "snippets": [
+      {
+        "language": "yaml",
+        "path": "./snippets/ai-actions-yaml.json"
+      },
+      {
+        "language": "yaml",
+        "path": "./snippets/data-transformation-yaml.json"
+      },
+      {
+        "language": "yaml",
+        "path": "./snippets/input-output-yaml.json"
+      },
+      {
+        "language": "yaml",
+        "path": "./snippets/text-processors-yaml.json"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "extension.gatewayCustomEditor",
+        "displayName": "Gateway Messages",
+        "selector": [
+          {
+            "filenamePattern": "*.gateway.aistream"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "extension.appLogsCustomEditor",
+        "displayName": "Application Logs",
+        "selector": [
+          {
+            "filenamePattern": "*.logs.aistream"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "languages": [
+      {
+        "id": "ai-streams",
+        "aliases": [
+          "ai-stream-gateway-messages"
+        ],
+        "extensions": [
+          ".aistream"
+        ],
+        "firstLine": "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3})",
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Ai Streams",
+      "properties": {
+        "vs-aistreaming": {
+          "type": "object",
+          "title": "Additional settings",
+          "description": "Saved control planes",
+          "properties": {
+            "providerConfigs": {
+              "type": "array",
+              "title": "Constol Planes",
+              "description": "Streaming control plane URLs",
+              "default": [],
+              "items": {
+                "type": "object",
+                "title": "control-plane"
+              }
+            }
+          }
+        }
+      }
+    },
+    "views": {
+      "aiStreamsView": [
+        {
+          "id": "extension.aiStreamsExplorer",
+          "name": "Control Planes"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "extension.aiStreamsExplorer",
+        "contents": "You have no saved contol planes.\n[Add a control plane](command:extension.vsAiStreamsAddControlPlane)."
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "icon": "images/AI-Logo.svg",
+          "id": "aiStreamsView",
+          "title": "AI Streams"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "extension.aiStreamsRefreshExplorer",
+          "when": "view == extension.aiStreamsExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.vsAiStreamsAddControlPlane",
+          "when": "view == extension.aiStreamsExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "extension.aiStreamsAddTenant",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.controlPlane/i",
+          "group": "0@1"
+        },
+        {
+          "command": "extension.aiStreamsRemoveControlPlane",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.controlPlane/i",
+          "group": "1@1"
+        },
+        {
+          "command": "extension.aiStreamsInitApplication",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.tenant/i",
+          "group": "0@1"
+        },
+        {
+          "command": "extension.aiStreamsRemoveTenant",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.tenant/i",
+          "group": "1@1"
+        },
+        {
+          "command": "extension.aiStreamsApplicationDetails",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
+          "group": "0@1"
+        },
+        {
+          "command": "extension.aiStreamsViewApplicationRuntime",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
+          "group": "0@2"
+        },
+        {
+          "command": "extension.aiStreamsOpenGatewayEditor",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application.*\\.gateway/i",
+          "group": "0@3"
+        },
+        {
+          "command": "extension.aiStreamsOpenAppLogsEditor",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
+          "group": "0@4"
+        },
+        {
+          "command": "extension.aiStreamsRemoveApplication",
+          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
+          "group": "1@1"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "extension.aiStreamsRefreshExplorer",
+        "title": "Refresh control planes",
+        "category": "AiStreams",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "extension.vsAiStreamsAddControlPlane",
+        "title": "Add control plane",
+        "category": "AiStreams",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "extension.aiStreamsRemoveControlPlane",
+        "title": "Remove",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsAddTenant",
+        "title": "Add tenant",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsInitApplication",
+        "title": "New application",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsRemoveTenant",
+        "title": "Delete",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsRemoveApplication",
+        "title": "Delete",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsApplicationDetails",
+        "title": "Details",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsViewApplicationRuntime",
+        "title": "Runtime info",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsOpenGatewayEditor",
+        "title": "Messaging",
+        "category": "AiStreams"
+      },
+      {
+        "command": "extension.aiStreamsOpenAppLogsEditor",
+        "title": "Logs",
+        "category": "AiStreams"
+      }
+    ]
+  }
+}

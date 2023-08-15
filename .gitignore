@@ -1,0 +1,12 @@
+.npmrc
+.idea/
+.vscode-test/
+*.vsix
+node_modules/
+dist/
+
+out/
+/src/test/assets/secrets-for-test.yaml
+/src/test/assets/**.zip
+
+.github/openapi/openapi-generator-cli-6.6.0.jar

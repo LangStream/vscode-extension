@@ -1,0 +1,36 @@
+= LangStream
+
+This extension xxxxx
+
+== Getting Started
+
+=== Visual Studio Marketplace
+
+Visit https://marketplace.visualstudio.com/publishers/DataStax[DataStax page^] in the Visual Studio Marketplace.
+
+=== Direct Download
+
+Visit the https://github.com/riptano/streaming-gen-ai-vscode[releases page^] to download the vsix.
+
+[TIP]
+====
+For a quick guide on loading .vsix in VScode, https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix[read this^].
+====
+
+Once installed you'll notice a new Pulsar icon in the activity bar. Click it to activate the extension and see the option to save your providers configuration.
+
+== Output for debugging
+
+While using the extension you may want to see output of what is going on in the background. To do this, open the VSCode output panel and select the 'Ai with DataStax' output channel. This will show you the logs from the extension.
+
+== Roadmap of your ideas
+
+We've got high hopes for this extension. If you have an idea of a feature that would make it even better, please open an issue and let's discuss it! You can review the current roadmap in https://github.com/orgs/ripatno/projects/1[the GitHub project].
+
+== Contributing
+
+All contributors are welcome! It helps if you are familiar with Typescript (that's what the extension is written in), but it's not required. If you are interested in contributing, please reach out to us.
+
+=== Project Structure
+
+aaaaaaaa

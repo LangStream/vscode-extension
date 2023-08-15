@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "watch",
+			"problemMatcher": [
+				"$ts-webpack",
+				"$ts-webpack-watch"
+			],
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "never",
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false,
+				"group": "watchers"
+			}
+		},
+		{
+			"type": "npm",
+			"script": "lint",
+			"problemMatcher": "$eslint-stylish"
+		}
+	]
+}

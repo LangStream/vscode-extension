@@ -1,0 +1,50 @@
+{
+  "S3 Source": {
+    "prefix": ["s3-source","input-output"],
+    "description": "AI streams agent that watches an S3 bucket for new documents",
+    "body": [
+      "- name: \"Read from S3\"",
+      "\ttype: \"s3-source\"",
+      "\toutput: \"output-topic\" # optional",
+      "\tconfiguration:",
+      "\t\tbucketName: ${LINE_COMMENT}\"input-documents\"",
+      "\t\tendpoint: ${LINE_COMMENT}\"https://s3.us-west-2.amazonaws.com\"",
+      "\t\t${LINE_COMMENT} Could also be an S3 compatible provider",
+      "\t\t${LINE_COMMENT}endpoint: ${LINE_COMMENT}\"http://minio.minio-dev.svc.cluster.local:9000\"",
+      "\t\t${LINE_COMMENT}username: \"{{ secrets.s3.username }}\"",
+      "\t\t${LINE_COMMENT}password: \"{{ secrets.s3.password }}\""
+    ]
+  },
+  "Kafka Sink":{
+    "prefix": ["sink","input-output"],
+    "description": "AI streams agent that implements a Kafka sink connector",
+    "body": [
+      "${LINE_COMMENT} Remember to set the corresponding dependency in configuration.",
+      "- name: \"A Kafka sink\"",
+      "\ttype: \"sink\"",
+      "\tinput: \"input-topic\" # optional",
+      "\tconfiguration:",
+      "\t\tname: \"\" ${LINE_COMMENT} Discover sinks - https://packages.confluent.io/maven/io/confluent/",
+      "\t\t${LINE_COMMENT} Other configuration values"
+    ]
+  },
+  "Kafka Connect Sink for Apache Cassandra from DataStax": {
+    "prefix": ["cassandra-sink","input-output"],
+    "description": "AI streams agent that implements a Kafka sink connector for Apache Cassandra",
+    "body": [
+      "${LINE_COMMENT} Remember to set the corresponding dependency in configuration.",
+      "- name: \"Write to Cassandra\"",
+      "\ttype: \"sink\"",
+      "\tinput: \"input-topic\" # optional",
+      "\tconfiguration:",
+      "\t\tname: cassandra-sink",
+      "\t\t\"connector.class\": com.datastax.oss.kafka.sink.CassandraSinkConnector",
+      "\t\t\"key.converter\": org.apache.kafka.connect.storage.StringConverter",
+      "\t\t\"value.converter\": org.apache.kafka.connect.storage.StringConverter",
+      "\t\t\"cloud.secureConnectBundle\": \"{{ secrets.cassandra.secure-connect-bundle }}\"",
+      "\t\t\"auth.username\": \"{{ secrets.cassandra.username }}\"",
+      "\t\t\"auth.password\": \"{{ secrets.cassandra.password }}\"",
+      "\t\t\"topic.input-topic.vsearch.products.mapping\": \"id=value.id,description=value.description,name=value.name\""
+    ]
+  }
+}
