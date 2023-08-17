@@ -1,8 +1,7 @@
 /* eslint @typescript-eslint/naming-convention: 0 */
 import {
   AgentConfiguration,
-  Application, ComputeCluster, Dependency, Gateway,
-  Pipeline, Resource, Secret, StreamingCluster,
+  Application, ComputeCluster, StreamingCluster,
   TopicDefinition
 } from "../services/controlPlaneApi/gen";
 import * as path from "path";
@@ -16,17 +15,23 @@ export default class StreamingApplication {
   private readonly instance;
   private readonly secrets;
   private readonly gateways;
+  private readonly streamingApplicationName;
+  private readonly pythonExampleSrc: string | undefined;
 
-  constructor(module:{ pipeline: AgentConfiguration[]; topics: TopicDefinition[]; name: string; },
+  constructor(streamingApplicationName: string,
+              module:{ pipeline: AgentConfiguration[]; topics: TopicDefinition[]; name: string; },
               instance: { computeCluster: ComputeCluster; streamingCluster: StreamingCluster; globals?: { [p: string]: object } },
               configuration: { resources: any[]; dependencies: any[] } = {resources:[], dependencies:[]},
               secrets: any[] = [],
-              gateways: any[] = []) {
+              gateways: any[] = [],
+              pythonExampleSrc?: string) {
+    this.streamingApplicationName = streamingApplicationName;
     this.module = module;
     this.configuration = configuration;
     this.instance = instance;
     this.secrets = secrets;
     this.gateways = gateways;
+    this.pythonExampleSrc = pythonExampleSrc;
   }
 
   public get Module() { return this.module; }
@@ -34,6 +39,7 @@ export default class StreamingApplication {
   public get Instance() { return this.instance; }
   public get Secrets() { return this.secrets; }
   public get Gateways() { return this.gateways; }
+  public get StreamingApplicationName() { return this.streamingApplicationName; }
 
   public static fromInstance(instance: Application): StreamingApplication {
     if(instance.modules === undefined){
@@ -53,6 +59,7 @@ export default class StreamingApplication {
     }
 
     return new StreamingApplication(
+      module.id,
       {
         name: moduleKeys[0],
         topics: Object.keys(module.topics || {}).map((topicKey) => {
@@ -80,57 +87,6 @@ export default class StreamingApplication {
     );
   }
 
-/*  private asApplication(): Application {
-    let resc = [];
-    let secs = [];
-
-    // Assume an application will always at least 1 topic
-    if(this.module.topics.length === 0){
-      throw new Error("An application must have at least one topic");
-    }
-
-    // Assume an application will always at least 1 pipeline
-    if(this.module.pipeline.length === 0){
-      throw new Error("An application must have at least one pipeline");
-    }
-
-    if(this.configuration.resources.length > 0) {
-      this.configuration.resources.forEach((resource) => {
-
-      });
-      resc = this.configuration.resources.reduce(((resource) => ({...resource, [<string>resource.id]: resource})));
-    }
-
-    if(this.secrets.length > 0) {
-      secs = this.secrets.reduce(((secret) => ({...secret, [<string>secret.id]: secret})));
-    }
-
-    return {
-      dependencies: this.configuration.dependencies,
-      gateways: { gateways: this.gateways },
-      instance: this.instance,
-      modules: {
-        module: {
-          topics: { topics: this.module.topics.reduce(((topic) => ({ ...topic, [<string>topic.name]: topic}))) },
-          //pipeline: this.module.pipeline
-        }
-      },
-      resources: { resources: resc },
-      secrets: { secrets: secs }
-    };
-  }*/
-
-  private asSingleYaml(): string {
-    const d = new YAML.Document();
-    d.add(this.secrets);
-    d.add("---");
-    d.add(this.configuration);
-    d.add("---");
-    d.add(this.module);
-
-    return d.toString();
-  }
-
   public writeAsFiles(applicationFolder: string): [string, fs.PathLike][] {
     const applicationFolderPath = path.join(applicationFolder, "application");
     const modulePath = path.join(applicationFolderPath.toLowerCase(), "pipeline.yaml");
@@ -138,6 +94,8 @@ export default class StreamingApplication {
     const gatewaysPath = path.join(applicationFolderPath.toLowerCase(), "gateways.yaml");
     const instancePath = path.join(applicationFolder, "instance.yaml");
     const secretsPath = path.join(applicationFolder, "secrets.yaml");
+    const pythonFolderPath = path.join(applicationFolderPath.toLowerCase(), "python");
+    const pythonPath = path.join(pythonFolderPath.toLowerCase(), "example.py");
 
     const opts:fs.WriteFileOptions = {encoding: "utf8", flag: "w"};
 
@@ -145,6 +103,7 @@ export default class StreamingApplication {
       || (this.configuration?.resources?.length ?? 0 > 0));
     const shouldCreateSecrets = (this.secrets?.length ?? 0 > 0);
     const shouldCreateGateways = (this.gateways?.length ?? 0 > 0);
+    const shouldCreatePython = (this.pythonExampleSrc !== undefined && this.pythonExampleSrc.length > 0);
 
     const yamlToString:YAML.ToStringOptions = {
       indent: 2,
@@ -202,6 +161,11 @@ export default class StreamingApplication {
       fs.writeFileSync(secretsPath, YAML.stringify({secrets: this.secrets}, null, yamlToString), opts);
     }
 
+    if(shouldCreatePython){
+      fs.mkdirSync(pythonFolderPath);
+      fs.writeFileSync(pythonPath, <string>this.pythonExampleSrc);
+    }
+
     const returnPaths:[string, fs.PathLike][] = [
       ["application/pipeline.yaml", modulePath],
       ["instance.yaml", instancePath]
@@ -217,6 +181,10 @@ export default class StreamingApplication {
 
     if(shouldCreateSecrets){
       returnPaths.push( ["secrets.yaml", secretsPath]);
+    }
+
+    if(shouldCreatePython){
+      returnPaths.push( ["application/python/example.py", pythonPath]);
     }
 
     return returnPaths;

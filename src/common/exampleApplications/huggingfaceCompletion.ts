@@ -43,7 +43,7 @@ export default class HuggingfaceCompletionExampleApplication extends StreamingAp
           type: "hugging-face-configuration",
           name: "Hugging Face AI configuration",
           configuration: {
-            "access-key": "{{ secrets.hugging-face.access-key }}"
+            "access-key": "{{{ secrets.hugging-face.access-key }}}"
           }
         }
       ],
@@ -61,6 +61,6 @@ export default class HuggingfaceCompletionExampleApplication extends StreamingAp
       new KafkaSecret()
     ];
 
-    super(module, instance, configuration, secrets);
+    super("Hugging face completions", module, instance, configuration, secrets);
   }
 }

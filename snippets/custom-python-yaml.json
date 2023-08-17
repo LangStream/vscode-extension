@@ -1,0 +1,48 @@
+{
+  "Custom python source": {
+    "prefix": [
+      "python-source",
+      "custom-python"
+    ],
+    "description": "A custom python source agent",
+    "body": [
+      "- name: \"Python source\"",
+      "\ttype: \"python-source\"",
+      "\toutput: \"PROVIDE-VALUE\"",
+      "\tconfiguration:",
+      "\t\tclassName: example.ExampleSource",
+      "\t\tendpoint: \"https://example.domain.com\""
+    ]
+  },
+  "Custom python sink": {
+    "prefix": [
+      "python-sink",
+      "custom-python"
+    ],
+    "description": "A custom python sink agent",
+    "body": [
+      "- name: \"Python sink\"",
+      "\ttype: \"python-sink\"",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\tconfiguration:",
+      "\t\tclassName: example.ExampleSink",
+      "\t\tendpoint: \"https://example.domain.com\""
+    ]
+  },
+  "Custom python function": {
+    "prefix": [
+      "python-function",
+      "custom-python"
+    ],
+    "description": "A custom python function agent",
+    "body": [
+      "- name: \"Python function\"",
+      "\ttype: \"python-function\"",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\"",
+      "\tconfiguration:",
+      "\t\tclassName: example.ExampleFunction",
+      "\t\tendpoint: \"https://example.domain.com\""
+    ]
+  }
+}

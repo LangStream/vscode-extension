@@ -1,0 +1,13 @@
+name: "test pipeline"
+topics:
+  - name: "input-topic"
+    creation-mode: create-if-not-exists
+  - name: "output-topic"
+    creation-mode: create-if-not-exists
+pipeline:
+  - name: "Flatten value"
+    type: "flatten"
+    input: "input-topic"
+    output: "output-topic"
+    configuration:
+      delimiter: "_"

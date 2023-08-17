@@ -1,0 +1,7 @@
+gateways:
+  - id: "consume-gateway"
+    type: consume
+    topic: "output-topic"
+  - id: "produce-gateway"
+    type: produce
+    topic: "input-topic"

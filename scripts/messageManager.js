@@ -16,36 +16,69 @@ class MessageManager {
     this.filter();
   }
 
-  formatListItem(gatewayMessage){
+  formatListItem(message){
+    //console.log(message);
     let msgContainerClass = 'justify-content-end';
-    let label =   `to: ${gatewayMessage.gatewayId}`;
-    let msgClass = 'text-light bg-primary text-end';
-    let labelClass = 'text-end';
+    let label =   `to`;
+    let msgClass = 'text-light bg-primary';
 
-    if(gatewayMessage.command === "gatewayMessage"){
+    if(message.command === "consumeMessage"){
       msgContainerClass = 'justify-content-start';
-      label = `from: ${gatewayMessage.gatewayId}`;
+      label = `from`;
       msgClass = 'text-dark bg-light text-start';
-      labelClass = 'text-start';
     }
 
-    let messageText = gatewayMessage.text;
-    if(typeof messageText === 'object'){
-      messageText = JSON.stringify(gatewayMessage.text);
+    const messageText = message.text;
 
-      if(messageText === {}){
-        return;
-      }
-    }
+    const messageRecord = messageText.record;
+    console.log(messageRecord);
 
-    return `
+    switch (message.command){
+      case "userMessage":
+      case "consumeMessage":
+
+        let messagePayload = "";
+        try{
+          messagePayload = JSON.stringify(JSON.parse(messageRecord.value), null, 2);
+        }catch{
+          messagePayload = messageRecord.value;
+        }
+
+        let headers = "";
+        try{
+          headers = JSON.stringify(messageRecord.headers, null, 2);
+        }catch{
+          headers = messageRecord.headers;
+        }
+
+        return `
     <div class="w-100 d-flex ${msgContainerClass}">
-        <div class="row mx-4" style="width: 40%!important;">
-            <div class="col-12 rounded-3 p-3 ${msgClass}">${messageText}</div>
-            <div class="col-12 text-muted ${labelClass}">${label}</div>
+        <div class="row mx-4" style="width: 52%!important;">
+          <div class="col-12 rounded-3 p-1 px-2 ${msgClass}">
+            <div class="row no-gutters">
+              <div class="col-12"><span class="text-muted">${label}:</span> ${message.gatewayId}</div>
+              <div class="col-12"><span class="text-muted">key:</span> ${messageRecord.key ?? "<span class=\"text-muted\">none</span>"}</div>
+              <div class="col-12"><span class="text-muted">headers:</span> <code>${headers ?? ""}</code></div>
+              <div class="col-12 pt-2"><pre><code>${messagePayload ?? ""}</code></pre></div>
+            </div>
+          </div>
         </div>
     </div>
 `;
+      case "produceResponse":
+        return `
+    <div class="w-100 d-flex ${msgContainerClass}">
+        <div class="row mx-4" style="width: 52%!important;">
+          <div class="col-12 rounded-3 p-1 px-2 ${msgClass}">
+            <div class="row no-gutters">
+              <div class="col-12"><span class="text-muted">produce status:</span> ${messageText.status ?? "null"}</div>
+              <div class="col-12 pt-2">${messageText.reason ?? ""}</div>
+            </div>
+          </div>
+        </div>
+    </div>
+`;
+    }
   }
 
   add(gatewayMessage, formatMessage=true) { //type: TopicMessage

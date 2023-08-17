@@ -11,19 +11,13 @@ import ConfigurationProvider from "../providers/configuration";
 import TenantService from "../services/tenant";
 import WatchApplicationDeployTask from "../services/watchApplicationDeployTask";
 import * as path from "path";
-import StreamingApplication from "../common/streamingApplication";
 import DocumentHelper from "../common/documentHelper";
 import {IWorkerNode} from "../providers/controlPlaneTreeData/nodes/worker";
-import CassandraSinkExampleApplication from "../common/exampleApplications/cassandraSink";
-import HuggingfaceCompletionExampleApplication from "../common/exampleApplications/huggingfaceCompletion";
-import QueryCassandraExampleApplication from "../common/exampleApplications/queryCassandra";
-import S3SourceExampleApplication from "../common/exampleApplications/s3Source";
-import ComputeOpenAIEmbeddingsExampleApplication from "../common/exampleApplications/computeOpenAIEmbeddings";
-import ComputeVertexEmbeddingsExampleApplication from "../common/exampleApplications/computeVertexAIEmbeddings";
 import TDeployableApplication from "../types/tDeployableApplication";
 import * as Constants from "../common/constants";
 import GatewayCustomEditorProvider from "../providers/gatewayCustomEditor/gatewayCustomEditorProvider";
 import AppLogsCustomEditorProvider from "../providers/appLogsCustomEditor/appLogsCustomEditorProvider";
+import ExampleApplicationRegistry from "../common/exampleApplications/registry";
 
 export default class ApplicationController {
   public static async delete(applicationNode: IApplicationNode, controlPlaneTreeProvider: ControlPlaneTreeDataProvider): Promise<void> {
@@ -35,21 +29,19 @@ export default class ApplicationController {
       return;
     }
 
-    const task = new WatchApplicationDeletingTask(applicationNode.tenantName, applicationName, applicationService, controlPlaneTreeProvider);
+    const task = new WatchApplicationDeletingTask(applicationNode.tenantName, applicationName, applicationService, () => controlPlaneTreeProvider.refresh(applicationNode));
 
     Logger.info(`Deleting application '${applicationName}'`);
 
     applicationService.delete(applicationNode.tenantName, applicationName).then(() => {
-      new ProgressRunner<StoredApplication>("Delete application").run(task).finally(() => {
-        controlPlaneTreeProvider.refresh();
-      });
+      new ProgressRunner<StoredApplication>("Delete application").run(task);
     }).catch((e: any) => {
       Logger.error('Deploy application', e);
       vscode.window.showErrorMessage(e.data?.detail ?? "An error occurred deleting, refer to the output view for more details");
     });
   }
 
-  public static async showInitOptions(context:vscode.ExtensionContext): Promise<void>{
+  public static async showNewApplicationOptions(exampleApplicationsRegistry: ExampleApplicationRegistry): Promise<void>{
     const exampleQuickPickOpts: vscode.QuickPickOptions = {
       canPickMany: false,
       ignoreFocusOut: true,
@@ -63,47 +55,15 @@ export default class ApplicationController {
       openLabel: `Select folder`
     };
 
-    const exampleApplications = [
-      "Cassandra sink",
-      "Compute embeddings with OpenAI",
-      "Compute embeddings with Vertex AI",
-      "Hugging-face prompt completion",
-      "OpenAI prompt completion",
-      "Query cassandra",
-      "AWS S3 source"
-    ];
+    const exampleApplications = exampleApplicationsRegistry.exampleApplications.map((exampleApplication) => exampleApplication.StreamingApplicationName);
 
     const exampleApplicationName = await vscode.window.showQuickPick(exampleApplications, exampleQuickPickOpts);
+
     if(exampleApplicationName === undefined){
       return;
     }
 
-    let exampleApplication: StreamingApplication | undefined = undefined;
-    const extensionUriPath = context.extensionUri.fsPath;
-
-    switch (exampleApplicationName){
-      case "Cassandra sink":
-        exampleApplication = new CassandraSinkExampleApplication(extensionUriPath);
-        break;
-      case "Compute embeddings with OpenAI":
-        exampleApplication = new ComputeOpenAIEmbeddingsExampleApplication(extensionUriPath);
-        break;
-      case "Compute embeddings with Vertex AI":
-        exampleApplication = new ComputeVertexEmbeddingsExampleApplication(extensionUriPath);
-        break;
-      case "Hugging-face prompt completion":
-        exampleApplication = new HuggingfaceCompletionExampleApplication(extensionUriPath);
-        break;
-      case "OpenAI prompt completion":
-        exampleApplication = new HuggingfaceCompletionExampleApplication(extensionUriPath);
-        break;
-      case "Query cassandra":
-        exampleApplication = new QueryCassandraExampleApplication(extensionUriPath);
-        break;
-      case "AWS S3 source":
-        exampleApplication = new S3SourceExampleApplication(extensionUriPath);
-        break;
-    }
+    const exampleApplication = exampleApplicationsRegistry.exampleApplications.find((exampleApplication) => exampleApplication.StreamingApplicationName === exampleApplicationName);
 
     if(exampleApplication === undefined){
       return;
@@ -218,6 +178,7 @@ export default class ApplicationController {
         deployableApplication.configurationPath,
         deployableApplication.secretsPath,
         deployableApplication.gatewaysPath,
+        deployableApplication.pythonPath,
         dependenciesPaths);
     } catch (e: any) {
       Logger.error('Zip', e);
@@ -226,13 +187,15 @@ export default class ApplicationController {
       return;
     }
 
-    const watchDeployTask = new WatchApplicationDeployTask(deployableApplication.controlPlane.name, deployableApplication.tenantName,
-                                                          deployableApplication.storedApplication?.applicationId ?? deployableApplication.id,
-                                                          applicationService);
-
     // Call deploy|update and wait for it to finish or error (it should return quickly). Then watch app status.
 
     if(deployableApplication.storedApplication === undefined){
+      const watchDeployTask = new WatchApplicationDeployTask(deployableApplication.controlPlane.name,
+        deployableApplication.tenantName,
+        deployableApplication.id,
+        applicationService,
+        () => {});
+
       applicationService.deploy(deployableApplication.tenantName, deployableApplication.id, zipFileUri.fsPath).then(() => {
         new ProgressRunner<StoredApplication>("Deploy").run(watchDeployTask).finally(() => {
           controlPlaneTreeProvider.refresh();
@@ -246,8 +209,13 @@ export default class ApplicationController {
       return;
     }
 
+    const watchUpdateTask = new WatchApplicationDeployTask(deployableApplication.controlPlane.name, deployableApplication.tenantName,
+      <string>deployableApplication.storedApplication.applicationId,
+      applicationService,
+      () => {});
+
     applicationService.update(deployableApplication.tenantName, <string>deployableApplication.storedApplication.applicationId, zipFileUri.fsPath).then(() => {
-      new ProgressRunner<StoredApplication>("Update application").run(watchDeployTask).finally(() => {
+      new ProgressRunner<StoredApplication>("Update application").run(watchUpdateTask).finally(() => {
         controlPlaneTreeProvider.refresh();
         this.cleanUpWorkspace(zipFileUri.fsPath);
       });

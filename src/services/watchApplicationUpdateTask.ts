@@ -4,7 +4,7 @@ import ApplicationService from "./application";
 import * as vscode from "vscode";
 import * as Constants from "../common/constants";
 
-export default class WatchApplicationDeployTask implements TObservableTask<StoredApplication> {
+export default class WatchApplicationUpdateTask implements TObservableTask<StoredApplication> {
   constructor(private readonly controlPanelName: string,
               private readonly tenantName: string,
               private readonly applicationId: string,
@@ -26,7 +26,6 @@ export default class WatchApplicationDeployTask implements TObservableTask<Store
   }
 
   hasErrors(actionResult: StoredApplication | undefined): boolean {
-    //console.log("hasErrors", actionResult);
     return actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.errorDeploying;
   }
 
@@ -46,7 +45,7 @@ export default class WatchApplicationDeployTask implements TObservableTask<Store
       return;
     }
 
-    vscode.window.showInformationMessage(`Application deployed ${this.viewLogsMarkdown.value}`);
+    vscode.window.showInformationMessage(`Application updated ${this.viewLogsMarkdown.value}`);
   }
 
   onProgress(actionResult: StoredApplication | undefined): ProgressReport {
@@ -55,7 +54,7 @@ export default class WatchApplicationDeployTask implements TObservableTask<Store
     this.progressCallBack();
 
     if (actionResult === undefined) {
-      return {message: "Waiting to deploy", increment: increment};
+      return {message: "Waiting to update", increment: increment};
     }
 
     switch (actionResult.status?.status?.status) {

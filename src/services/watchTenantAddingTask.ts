@@ -1,11 +1,10 @@
 import {TenantConfiguration} from "./controlPlaneApi/gen";
 import {ProgressReport, TObservableTask} from "../types/tObservableTask";
-import ControlPlaneTreeDataProvider from "../providers/controlPlaneTreeData/explorer";
 import {window} from "vscode";
 import TenantService from "./tenant";
 
 export default class WatchTenantAddingTask implements TObservableTask<TenantConfiguration> {
-  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly controlPlaneTreeDataProvider: ControlPlaneTreeDataProvider) {
+  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly progressCallBack: () => void) {
   }
 
   action = () => {
@@ -21,6 +20,7 @@ export default class WatchTenantAddingTask implements TObservableTask<TenantConf
   onProgress = () => {
     //console.log(tenantConfiguration);
     const increment = (100/(this.timeout/this.pollingInterval));
+    this.progressCallBack();
 
     return new class implements ProgressReport {
       message = "Tenant being added";
@@ -29,7 +29,6 @@ export default class WatchTenantAddingTask implements TObservableTask<TenantConf
   };
 
   onFinish = (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean): void => {
-    this.controlPlaneTreeDataProvider.refresh();
 
     if(waitExpired){
       window.showInformationMessage(`Timeout waiting for status of tenant ${this.tenantName}`);

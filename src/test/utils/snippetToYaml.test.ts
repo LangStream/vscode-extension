@@ -3,7 +3,7 @@ import {expect} from "chai";
 import * as yaml from "yaml";
 
 describe("Snippet to yaml tests", () => {
-  let snippetsFolderPath = "c:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\snippets\\input-output-yaml.json";
+  let snippetsFolderPath = "c:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\snippets\\input-output-yaml.json";
 
   it("should convert snippet to yaml", async () => {
     const snippetYamlDocument = snippetToYaml(snippetsFolderPath, "s3-source");

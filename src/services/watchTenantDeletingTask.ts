@@ -5,7 +5,7 @@ import {window} from "vscode";
 import TenantService from "./tenant";
 
 export default class WatchTenantDeletingTask implements TObservableTask<TenantConfiguration> {
-  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly controlPlaneTreeDataProvider: ControlPlaneTreeDataProvider) {
+  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly progressCallBack: () => void) {
   }
 
   action = () => {
@@ -20,6 +20,7 @@ export default class WatchTenantDeletingTask implements TObservableTask<TenantCo
   onProgress = () => {
     //console.log(tenantConfiguration);
     const increment = (100/(this.timeout/this.pollingInterval));
+    this.progressCallBack();
 
     return new class implements ProgressReport {
       message = "Tenant being deleted";
@@ -28,7 +29,6 @@ export default class WatchTenantDeletingTask implements TObservableTask<TenantCo
   };
 
   onFinish = (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean): void => {
-    this.controlPlaneTreeDataProvider.refresh();
 
     if(waitExpired){
       window.showInformationMessage(`Timeout waiting for status of tenant ${this.tenantName}`);

@@ -13,6 +13,8 @@ import ApplicationController from "./controllers/application";
 import DeployApplicationModuleCodeLens from "./providers/deployApplicationModuleCodeLens";
 import {IWorkerNode} from "./providers/controlPlaneTreeData/nodes/worker";
 import TDeployableApplication from "./types/tDeployableApplication";
+import ExampleApplicationRegistry from "./common/exampleApplications/registry";
+import * as path from "path";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
 	Logger.info('Welcome to the Ai Streams extension. There are many wonderful things to see and click.');
@@ -20,6 +22,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 	Logger.info('Building providers');
 	const controlPlaneTreeProvider = new ControlPlaneTreeDataProvider();
 	const deployApplicationModuleCodeLens = new DeployApplicationModuleCodeLens();
+
+	Logger.info('Building example apps registry');
+	const exampleApplicationsRegistry = ExampleApplicationRegistry.instance;
+	exampleApplicationsRegistry.registerAllExampleApplications(path.join(context.extensionUri.fsPath, "snippets"));
 
 	const documentSelector: vscode.DocumentSelector = [
 		{ scheme: '*', language: 'yaml' },
@@ -39,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		registerCommand(Constants.COMMAND_REMOVE_TENANT, (explorerNode: ITenantNode) => TenantController.delete(explorerNode, controlPlaneTreeProvider)),
 		registerCommand(Constants.COMMAND_ADD_TENANT, (explorerNode: IControlPlaneNode) => TenantController.add(explorerNode, controlPlaneTreeProvider)),
 		registerCommand(Constants.COMMAND_REMOVE_APPLICATION, (explorerNode: IApplicationNode) => ApplicationController.delete(explorerNode, controlPlaneTreeProvider)),
-		registerCommand(Constants.COMMAND_INIT_APPLICATION, () => ApplicationController.showInitOptions(context)),
+		registerCommand(Constants.COMMAND_INIT_APPLICATION, () => ApplicationController.showNewApplicationOptions(exampleApplicationsRegistry)),
 		registerCommand(Constants.COMMAND_DEPLOY_APPLICATION, (deployableApplication: TDeployableApplication) => ApplicationController.deploy(controlPlaneTreeProvider, context, deployableApplication)),
 		registerCommand(Constants.COMMAND_UPDATE_APPLICATION, (deployableApplication: TDeployableApplication) => ApplicationController.deploy(controlPlaneTreeProvider, context, deployableApplication)),
 		registerCommand(Constants.COMMAND_VIEW_APPLICATION_DETAILS, (explorerNode: IApplicationNode) => ApplicationController.viewDetails(explorerNode)),

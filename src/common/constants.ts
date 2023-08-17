@@ -2,13 +2,13 @@
 export const TELEM_KEY: string = 'xxxxxx';
 
 // CONFIG
-export const EXTENSION_CONFIG_KEY = "vs-aistreaming";
+export const EXTENSION_CONFIG_KEY = "vs-langstream";
 export const PROVIDER_CONFIGS_KEY = "controlPlanes";
 export const MAX_APPLICATION_NAME_LENGTH = 40;
 
 // LANGUAGE
-export const LANGUAGE_NAME: string = 'aistream';
-export const LANGUAGE_SCHEME: string = 'vs-aistream';
+export const LANGUAGE_NAME: string = 'langstream';
+export const LANGUAGE_SCHEME: string = 'vs-langstream';
 
 // COMMANDS
 export const COMMAND_REFRESH_EXPLORER = 'extension.aiStreamsRefreshExplorer';

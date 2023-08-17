@@ -1,6 +1,6 @@
 {
   "name": "langstream",
-  "displayName": "LangStream",
+  "displayName": "LangStream AI",
   "description": "Develop generative AI streams with LangStream",
   "version": "0.1.0-alpha",
   "publisher": "DataStax",
@@ -17,11 +17,12 @@
     "generative ai",
     "text processing",
     "embedding",
-    "ai completions"
+    "ai completions",
+    "langstream"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/datastax/langstream-vscode"
+    "url": "https://github.com/langstream/vscode-extension"
   },
   "icon": "images/AI-Logo.png",
   "activationEvents": [
@@ -92,6 +93,10 @@
       {
         "language": "yaml",
         "path": "./snippets/text-processors-yaml.json"
+      },
+      {
+        "language": "yaml",
+        "path": "./snippets/custom-python-yaml.json"
       }
     ],
     "customEditors": [
@@ -100,7 +105,7 @@
         "displayName": "Gateway Messages",
         "selector": [
           {
-            "filenamePattern": "*.gateway.aistream"
+            "filenamePattern": "*.gateway.langstream"
           }
         ],
         "priority": "default"
@@ -110,30 +115,17 @@
         "displayName": "Application Logs",
         "selector": [
           {
-            "filenamePattern": "*.logs.aistream"
+            "filenamePattern": "*.logs.langstream"
           }
         ],
         "priority": "default"
-      }
-    ],
-    "languages": [
-      {
-        "id": "ai-streams",
-        "aliases": [
-          "ai-stream-gateway-messages"
-        ],
-        "extensions": [
-          ".aistream"
-        ],
-        "firstLine": "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3})",
-        "configuration": "./language-configuration.json"
       }
     ],
     "configuration": {
       "type": "object",
       "title": "Ai Streams",
       "properties": {
-        "vs-aistreaming": {
+        "vs-langstream": {
           "type": "object",
           "title": "Additional settings",
           "description": "Saved control planes",

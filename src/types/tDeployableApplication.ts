@@ -10,6 +10,7 @@ export default interface TDeployableApplication {
   instancePath?: PathLike;
   secretsPath?: PathLike;
   gatewaysPath?: PathLike;
+  pythonPath?: PathLike;
   controlPlane?: TSavedControlPlane;
   tenantName?: string;
   storedApplication?: StoredApplication;

@@ -53,6 +53,6 @@ export default class QueryCassandraExampleApplication extends StreamingApplicati
       new CassandraSecret()
     ];
 
-    super(module, instance, configuration, secrets);
+    super("Query Cassandra database", module, instance, configuration, secrets);
   }
 }

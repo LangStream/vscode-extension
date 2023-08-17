@@ -39,6 +39,6 @@ export default class S3SourceExampleApplication extends StreamingApplication {
       new S3Secret()
     ];
 
-    super(module, instance, configuration, secrets);
+    super("AWS S3 source", module, instance, configuration, secrets);
   }
 }

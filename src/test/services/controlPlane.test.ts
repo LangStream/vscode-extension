@@ -63,11 +63,11 @@ describe("Control plane client tests", () => {
   it("should deploy application", async () => {
     // const tenantName = "test-tenant1";
     // const applicationId = "application-1";
-    // const zipFilePath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\services\\test.zip";
-    // const modulePath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\application\\pipeline.yaml";
-    // const configurationPath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\application\\configuration.yaml";
-    // const instancePath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\instance.yaml";
-    // const secretsPath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\secrets.yaml";
+    // const zipFilePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\services\\test.zip";
+    // const modulePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\pipeline.yaml";
+    // const configurationPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\configuration.yaml";
+    // const instancePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\instance.yaml";
+    // const secretsPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\secrets.yaml";
     //
     // await zipFiles(zipFilePath, modulePath, instancePath, configurationPath ?? "", secretsPath ?? "");
     //

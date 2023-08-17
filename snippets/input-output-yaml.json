@@ -5,14 +5,18 @@
     "body": [
       "- name: \"Read from S3\"",
       "\ttype: \"s3-source\"",
-      "\toutput: \"output-topic\" # optional",
+      "\toutput: \"output-topic\"",
       "\tconfiguration:",
-      "\t\tbucketName: ${LINE_COMMENT}\"input-documents\"",
-      "\t\tendpoint: ${LINE_COMMENT}\"https://s3.us-west-2.amazonaws.com\"",
+      "\t\tbucketName: \"REPLACE_WITH_NAME\"",
+      "\t\tendpoint: \"REPLACE_WITH_URL\" ${LINE_COMMENT}\"https://s3.us-west-2.amazonaws.com\"",
+      "\t\taccess-key: \"{{{secrets.s3.access-key}}}\"",
+      "\t\tsecret-key: \"{{{secrets.s3.secret}}}\"",
+      "\t\tregion: \"{{{secrets.s3.region}}}\"",
+      "\t\tidle-time: 5",
       "\t\t${LINE_COMMENT} Could also be an S3 compatible provider",
       "\t\t${LINE_COMMENT}endpoint: ${LINE_COMMENT}\"http://minio.minio-dev.svc.cluster.local:9000\"",
-      "\t\t${LINE_COMMENT}username: \"{{ secrets.s3.username }}\"",
-      "\t\t${LINE_COMMENT}password: \"{{ secrets.s3.password }}\""
+      "\t\t${LINE_COMMENT}username: \"{{{ secrets.minio.username }}}\"",
+      "\t\t${LINE_COMMENT}password: \"{{{ secrets.minio.password }}}\""
     ]
   },
   "Kafka Sink":{
@@ -22,9 +26,9 @@
       "${LINE_COMMENT} Remember to set the corresponding dependency in configuration.",
       "- name: \"A Kafka sink\"",
       "\ttype: \"sink\"",
-      "\tinput: \"input-topic\" # optional",
+      "\tinput: \"input-topic\"",
       "\tconfiguration:",
-      "\t\tname: \"\" ${LINE_COMMENT} Discover sinks - https://packages.confluent.io/maven/io/confluent/",
+      "\t\tname: \"\"",
       "\t\t${LINE_COMMENT} Other configuration values"
     ]
   },
@@ -35,15 +39,15 @@
       "${LINE_COMMENT} Remember to set the corresponding dependency in configuration.",
       "- name: \"Write to Cassandra\"",
       "\ttype: \"sink\"",
-      "\tinput: \"input-topic\" # optional",
+      "\tinput: \"input-topic\"",
       "\tconfiguration:",
       "\t\tname: cassandra-sink",
       "\t\t\"connector.class\": com.datastax.oss.kafka.sink.CassandraSinkConnector",
       "\t\t\"key.converter\": org.apache.kafka.connect.storage.StringConverter",
       "\t\t\"value.converter\": org.apache.kafka.connect.storage.StringConverter",
-      "\t\t\"cloud.secureConnectBundle\": \"{{ secrets.cassandra.secure-connect-bundle }}\"",
-      "\t\t\"auth.username\": \"{{ secrets.cassandra.username }}\"",
-      "\t\t\"auth.password\": \"{{ secrets.cassandra.password }}\"",
+      "\t\t\"cloud.secureConnectBundle\": \"{{{ secrets.cassandra.secure-connect-bundle }}}\"",
+      "\t\t\"auth.username\": \"{{{ secrets.cassandra.username }}}\"",
+      "\t\t\"auth.password\": \"{{{ secrets.cassandra.password }}}\"",
       "\t\t\"topic.input-topic.vsearch.products.mapping\": \"id=value.id,description=value.description,name=value.name\""
     ]
   }

@@ -16,9 +16,9 @@ import * as yaml from 'yaml';
 import TDeployableApplication from "../../../types/tDeployableApplication";
 
 describe("Cassandra sink example application tests", () => {
-  const snippetsDirPath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\snippets";
-  const applicationFolder = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\common\\exampleApplications\\temp";
-  const zipFilePath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\common\\exampleApplications\\temp.zip";
+  const snippetsDirPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\snippets";
+  const applicationFolder = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\common\\exampleApplications\\temp";
+  const zipFilePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\common\\exampleApplications\\temp.zip";
   const savedControlPane: TSavedControlPlane = {
     name: "test",
     webServiceUrl: "http://localhost:8090",
@@ -28,7 +28,7 @@ describe("Cassandra sink example application tests", () => {
   let applicationService: ApplicationService;
 
   before(() => {
-    const f = fs.readFileSync("C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\secrets-for-test.yaml");
+    const f = fs.readFileSync("C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\secrets-for-test.yaml");
     secretsForTests = yaml.parse(f.toString());
     applicationService = new ApplicationService(savedControlPane);
   });
@@ -122,6 +122,7 @@ describe("Cassandra sink example application tests", () => {
       deployableApplication.configurationPath,
       deployableApplication.secretsPath,
       deployableApplication.gatewaysPath,
+      undefined,
       dependencyPaths);
 
     await applicationService.deploy(tenantName, applicationId, zipFilePath);

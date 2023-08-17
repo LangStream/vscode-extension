@@ -39,8 +39,8 @@ export default class ComputeOpenAIEmbeddingsExampleApplication extends Streaming
           type: "open-ai-configuration",
           name: "OpenAI Azure configuration",
           configuration: {
-            url: "{{ secrets.open-ai.url }}",
-            "access-key": "{{ secrets.open-ai.access-key }}",
+            url: "{{{ secrets.open-ai.url }}}",
+            "access-key": "{{{ secrets.open-ai.access-key }}}",
             provider: "azure"
           }
         }
@@ -59,6 +59,6 @@ export default class ComputeOpenAIEmbeddingsExampleApplication extends Streaming
       new KafkaSecret()
     ];
 
-    super(module, instance, configuration, secrets);
+    super("Open AI embeddings", module, instance, configuration, secrets);
   }
 }

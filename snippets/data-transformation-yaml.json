@@ -8,8 +8,8 @@
     "body": [
       "- name: \"Cast to string\"",
       "\ttype: \"cast\"",
-      "\tinput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
-      "\toutput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\"",
       "\tconfiguration:",
       "\t\tschema-type: \"string\""
     ]
@@ -23,8 +23,8 @@
     "body": [
       "- name: \"Compute new record\"",
       "\ttype: \"compute\"",
-      "\tinput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
-      "\toutput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\"",
       "\tconfiguration:",
       "\t\tfields:",
       "\t\t\t- name: \"key.newKeyField\"",
@@ -50,8 +50,8 @@
     "body": [
       "- name: \"Drop user data\"",
       "\ttype: \"drop\"",
-      "\tinput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
-      "\toutput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\"",
       "\tconfiguration:",
       "\t\twhen: \"value.firstName == value1\""
     ]
@@ -65,8 +65,8 @@
     "body": [
       "- name: \"Drop password\"",
       "\ttype: \"drop-fields\"",
-      "\tinput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
-      "\toutput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\"",
       "\tconfiguration:",
       "\t\tfields:",
       "\t\t\t- \"password\""
@@ -81,8 +81,8 @@
     "body": [
       "- name: \"Flatten value\"",
       "\ttype: \"flatten\"",
-      "\tinput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
-      "\toutput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\"",
       "\tconfiguration:",
       "\t\tdelimiter: \"_\""
     ]
@@ -96,8 +96,8 @@
     "body": [
       "- name: \"Merge key value\"",
       "\ttype: \"merge-key-value\"",
-      "\tinput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
-      "\toutput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional"
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\""
     ]
   },
   "Unwrap key value": {
@@ -109,8 +109,8 @@
     "body": [
       "- name: \"Unwrap key value\"",
       "\ttype: \"unwrap-key-value\"",
-      "\tinput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
-      "\toutput: \"PROVIDE-VALUE\" ${LINE_COMMENT} optional",
+      "\tinput: \"PROVIDE-VALUE\"",
+      "\toutput: \"PROVIDE-VALUE\"",
       "\tconfiguration:",
       "\t\tunwrapKey: false"
     ]

@@ -85,6 +85,7 @@ export default class ApplicationService {
                               configurationPath: PathLike | undefined,
                               secretsPath: PathLike | undefined,
                               gatewaysPath: PathLike | undefined,
+                              pythonPath: PathLike | undefined,
                               dependenciesPaths: [string, PathLike][] = []): Promise<void> {
     const fileInfo:[string, PathLike][] = [
       ["pipeline.yaml", modulePath],
@@ -94,10 +95,29 @@ export default class ApplicationService {
     if(configurationPath !== undefined){ fileInfo.push(["configuration.yaml", configurationPath]); }
     if(secretsPath !== undefined){ fileInfo.push(["secrets.yaml", secretsPath]); }
     if(gatewaysPath !== undefined){ fileInfo.push(["gateways.yaml", gatewaysPath]); }
+    if(pythonPath !== undefined){
+      const a = this.gatherDirFiles("python", pythonPath.toString());
+      fileInfo.push(...a); }
 
     fileInfo.push(...dependenciesPaths);
 
     return zipFiles(zipDestinationPath, ...fileInfo);
+  }
+
+  private gatherDirFiles(zipDirPath:string, pathToDir: string): [string, PathLike][] {
+    const a: [string, PathLike][] = [];
+
+    fs.readdirSync(pathToDir, { withFileTypes: true }).forEach((value: fs.Dirent) => {
+      if(value.isFile()) {
+        a.push([`${zipDirPath}/${value.name}`, path.join(pathToDir, value.name)]);
+      }
+
+      if(value.isDirectory()) {
+        a.push(...this.gatherDirFiles(`${zipDirPath}/${value.name}`, path.join(pathToDir, value.name)));
+      }
+    });
+
+    return a;
   }
 
   public async downloadDependencies(saveFolderPath: PathLike, dependencies: Dependency[]): Promise<[string, PathLike][]> {
@@ -125,10 +145,12 @@ export default class ApplicationService {
         const url = new URL(dependency.url);
 
         let outputPath = "";
+        let zipFilePath = "";
 
         switch (dependency.type) {
           case "java-library":
             outputPath = path.join(<string>saveFolderPath, "java", "lib");
+            zipFilePath = 'java/lib';
             break;
           default:
             errors.push(new Error("unsupported dependency type: " + dependency.type));
@@ -139,7 +161,9 @@ export default class ApplicationService {
           fs.mkdirSync(outputPath, {recursive: true});
         }
 
-        const filePath = path.join(outputPath, url.pathname.substring(url.pathname.lastIndexOf('/') + 1));
+        const fileName = url.pathname.substring(url.pathname.lastIndexOf('/') + 1);
+        const filePath = path.join(outputPath, fileName);
+        zipFilePath = `${zipFilePath}/${fileName}`;
 
         // Block thread until file is downloaded
         const axiosResponse = await axios.get(url.href, {responseType: 'arraybuffer'});
@@ -170,7 +194,7 @@ export default class ApplicationService {
 
         try{
           fs.writeFileSync(filePath, fileData);
-          dependencyPaths.push([filePath, filePath]);
+          dependencyPaths.push([zipFilePath, filePath]);
         }catch(e: any) {
           errors.push(e);
         }

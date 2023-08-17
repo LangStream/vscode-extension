@@ -53,6 +53,6 @@ export default class CassandraSinkExampleApplication extends StreamingApplicatio
       }
     ];
 
-    super(module, instance, configuration, secrets, gateways);
+    super("Sink to Cassandra database", module, instance, configuration, secrets, gateways);
   }
 }

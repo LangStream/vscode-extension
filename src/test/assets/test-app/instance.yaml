@@ -1,0 +1,13 @@
+instance:
+  streamingCluster:
+    type: "kafka"
+    configuration:
+      admin:
+        bootstrap.servers: kafka-gcp-uscentral1.streaming.datastax.com:9093
+        security.protocol: SASL_SSL
+        sasl.jaas.config: "org.apache.kafka.common.security.plain.PlainLoginModule required username='{{ secrets.astra-token.tenant }}' password='token:{{ secrets.astra-token.pulsar-token }}';"
+        sasl.mechanism: PLAIN
+        session.timeout.ms: 45000
+
+  computeCluster:
+    type: "kubernetes"

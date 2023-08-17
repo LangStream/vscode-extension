@@ -10,7 +10,7 @@ describe('',() => {
   let agentDocument:Document;
 
   beforeEach(() => {
-    const f = fs.readFileSync("C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\snippets\\ai-actions-yaml.json");
+    const f = fs.readFileSync("C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\snippets\\ai-actions-yaml.json");
 
     const json = JSON.parse(f.toString());
     const yamlStr:string = json["AI chat completion"].body.join("\n")
@@ -22,7 +22,7 @@ describe('',() => {
     agentSequence= <YAMLMap>seq.items[0];
   });
 
-  it('', () => {
+  it('should retrieve yaml', () => {
     agentSequence.set('input', "11111");
     agentSequence.set('output', "2222");
 
@@ -37,28 +37,5 @@ describe('',() => {
     const js = agentDocument.toJS();
     const agentConfig = <AgentConfiguration>js[0];
     expect(agentConfig.input).to.equal("11111");
-
-    // new AIAction("ai-chat-completions")
-    //   .input()
-    //   .output()
-    //   .configuration({
-    //     model: ""
-    //   })
   });
 });
-/*
-val:
-- name: "AI completion"
-  type: "ai-chat-completions" # don't forget to add a compatible AI model in configuration.resources
-  input: "PROVIDE-VALUE" # optional
-  output: "PROVIDE-VALUE" # optional
-  configuration:
-    model: "PROVIDE-VALUE" # gpt-3.5-turbo
-    completion-field: "value.completion"
-    log-field: "value.final-prompt"
-    messages:
-      - role: "system"
-        content: "You are a friendly customer service agent"
-      - role: "user"
-        content: "Answer the question: {{% value }}"
-*/

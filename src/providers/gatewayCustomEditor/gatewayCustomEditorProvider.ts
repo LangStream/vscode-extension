@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import {ErrorEvent, MessageEvent, WebSocket} from "ws";
 import GatewayMessagesDocument from "./gatewayMessagesDocument";
 import Logger from "../../common/logger";
-import {AgentConfiguration, Gateway} from "../../services/controlPlaneApi/gen";
+import {AgentConfiguration, Gateway, GatewayTypeEnum} from "../../services/controlPlaneApi/gen";
 
 export default class GatewayCustomEditorProvider implements vscode.CustomReadonlyEditorProvider<GatewayMessagesDocument> {
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -35,6 +35,14 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
     token.onCancellationRequested(() => {
       webviewPanel.dispose();
     });
+
+    // const consumeGateways = gatewayMessagesDocument.content.gatewayWebSockets.filter((gatewayWebSocket) => {
+    //   return gatewayWebSocket.gateway.type === GatewayTypeEnum.consume;
+    // });
+    //
+    // const produceGateways = gatewayMessagesDocument.content.gatewayWebSockets.filter((gatewayWebSocket) => {
+    //   return gatewayWebSocket.gateway.type === GatewayTypeEnum.produce;
+    // });
 
     webviewPanel.webview.onDidReceiveMessage((message) => {
       // Logger.info("Received message");
@@ -69,28 +77,65 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
             try{
               const websocket = new WebSocket(gatewayWebSocket.webSocketUrl);
 
-              websocket.onopen = () => {
+              websocket.on("open", () => {
                 webviewPanel.webview.postMessage({command: "connection", text: "opened", gatewayId: gatewayWebSocket.gateway.id});
-              };
+              });
 
-              websocket.onerror = (e: ErrorEvent) => {
-                webviewPanel.webview.postMessage({command: "error", text: "errored - " + e.message, gatewayId: gatewayWebSocket.gateway.id});
-              };
 
-              websocket.onclose = () => {
+              websocket.on("error", (err: any) => {
+                webviewPanel.webview.postMessage({command: "error", text: "errored - " + err, gatewayId: gatewayWebSocket.gateway.id});
+              });
+
+              websocket.on("close", (data: any) => {
                 try{
                   webviewPanel.webview.postMessage({command: "connection", text: "closed", gatewayId: gatewayWebSocket.gateway.id});
                 }catch{
                   //no op because the webview may have been disposed
                 }
-              };
+              });
 
-              websocket.onmessage = async (e: MessageEvent) => {
-                //const readerMessage = gatewayMessage.fromWsMessage(e);
-                // Logger.info("Received message from gateway");
-                // Logger.info(e);
-                webviewPanel?.webview?.postMessage({command: "gatewayMessage", text: e, gatewayId: gatewayWebSocket.gateway.id});
-              };
+              websocket.on("message", (data: any) => {
+                const message = data.toString();
+Logger.info("Received message from gateway");
+Logger.info(message);
+
+                const consumePushMessage = ConsumePushMessage.tryCast(message);
+                if(consumePushMessage !== undefined){
+                  Logger.info("Received consume push message from gateway");
+                  webviewPanel?.webview?.postMessage({command: "consumeMessage", text: consumePushMessage, gatewayId: gatewayWebSocket.gateway.id});
+                  return;
+                }
+
+                const produceResponse = ProduceResponse.tryCast(message);
+                if(produceResponse !== undefined){
+                  Logger.info("Received produce response from gateway");
+                  webviewPanel?.webview?.postMessage({command: "produceResponse", text: produceResponse, gatewayId: gatewayWebSocket.gateway.id});
+                  return;
+                }
+
+                Logger.warn("Received unknown message from gateway");
+                Logger.warn(message);
+
+                // Logger.info("Received message from consume gateway");
+                // Logger.info(data.toString());
+                //{
+                //     "command": "gatewayMessage",
+                //     "text": "{\"status\":\"PRODUCER_ERROR\",\"reason\":\"Cannot find a serializer for class java.util.LinkedHashMap\"}",
+                //     "gatewayId": "simple-produce"
+                // }
+
+                //{
+                //     "command": "userMessage",
+                //     "text": {
+                //         "record": {
+                //             "headers": null,
+                //             "key": null,
+                //             "value": "234234234"
+                //         }
+                //     },
+                //     "gatewayId": "simple-produce"
+                // }
+              });
 
               gatewayWebSockets.push([gatewayWebSocket.gateway, websocket]);
             }catch (e:any) {
@@ -99,19 +144,24 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
           });
           break;
         case("userMessage"):
-          const gatewayWebSocket = gatewayWebSockets?.find(([gateway]) => { return (gateway.id === message.gatewayId); });
-          if(gatewayWebSocket === undefined){
+          const gateway = gatewayWebSockets.find((gatewayWebSocket) => { return (gatewayWebSocket[0].id === message.gatewayId); });
+          if(gateway === undefined){
             Logger.warn("Received message from unknown gateway: %o", message);
             break;
           }
 
-          if(gatewayWebSocket[1].readyState !== WebSocket.OPEN){
-            Logger.warn("Received message for gateway with closed socket: %o", message);
-            break;
-          }
+          Logger.info(`Sending message to gateway ${gateway[0].id}`);
 
-          gatewayWebSocket[1].send(message.text, (error) => {
-            Logger.error("Sending message to gateway", error);
+          const produceRequest = new ProduceRequest(null, message.text, null);
+
+          gateway[1].send(JSON.stringify(produceRequest), (err) => {
+            if(err){
+              Logger.warn("Error sending message to gateway", err);
+              webviewPanel.webview.postMessage({command: "error", text: "errored - " + err, gatewayId: gateway[0].id});
+              return;
+            }
+
+            Logger.info(`Successfully sent message to gateway ${gateway[0].id}`);
           });
 
           break;
@@ -152,10 +202,16 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
           display: flex;
           flex-direction: column-reverse;
         }
+        ul.striped-list > li:nth-of-type(odd) > table > tbody > tr > td {
+            background-color: var(--vscode-input-background) ;
+        }
+        ul.striped-list > li:last-child {
+            border-bottom: none;
+        }
       </style>
       </head>
       <body class="vsCodePulsarAdminWizard">
-        <div class="container " style="height: 97vh!important;">
+        <div class="container-fluid" style="height: 97vh!important;">
            <div class="row mb-2">
              <div class="col-12">
                 <div class="alert alert-info d-none" role="alert" id="pageMessage"></div>
@@ -163,27 +219,27 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
              </div>
           </div>
           <div class="row h-100">
-            <div class="col-3">
+            <div class="col-3 h-100">
               <div class="row h-50">
-                <div class="col-12 pb-4">
+                <div class="col-12 pb-4 h-100">
                 <div class="card h-100">
   <div class="card-header">Agents</div>
-  <div class="card-body overflow-scroll"><ul id="agents-list"></ul></div>
+  <div class="card-body overflow-scroll"><ul class="list-group striped-list" id="agents-list"></ul></div>
 </div>
 </div>
               </div>
               <div class="row h-50">
-                <div class="col-12">
+                <div class="col-12 h-100">
                 <div class="card h-100">
   <div class="card-header">Gateways</div>
-  <div class="card-body overflow-scroll"><ul id="gateways-list" class="list-group"></ul></div>
+  <div class="card-body overflow-scroll"><ul id="gateways-list" class="list-group striped-list"></ul></div>
 </div>
 </div>
               </div>
             </div>
-            <div class="col-9">
+            <div class="col-9 h-100">
               <div class="" id="messages-container" style="height: 93%!important;">
-                <div class="col-12 no-gutters bg-light-subtle border rounded h-100 p-2" id="messages-list" class="list-group"><div class="list"></div></div>
+                <div class="col-12 overflow-y-scroll no-gutters bg-light-subtle border rounded h-100 p-2" id="messages-list" class="list-group"><div class="list"></div></div>
               </div>
               <div class="row mt-4">
                 <div class="col-12">
@@ -214,4 +270,65 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
       </html>
     `;
   }
+}
+
+class ProduceRequest {
+  constructor(public readonly key: string | null,
+              public readonly value: string | null,
+              public readonly headers: string | null){}
+}
+
+class ProduceResponse {
+  constructor(public readonly status: Status,
+              public readonly reason: string){}
+  public static tryCast(json: string): ProduceResponse | undefined {
+    try {
+      const a = JSON.parse(json);
+
+      if(a.status === undefined){
+        return undefined;
+      }
+
+      if(a.reason === undefined){
+        return undefined;
+      }
+
+      return new ProduceResponse(a.status, a.reason);
+    } catch {
+      return undefined;
+    }
+  }
+}
+
+enum Status {
+  OK = "OK",
+  BAD_REQUEST = "BAD_REQUEST",
+  PRODUCER_ERROR = "PRODUCER_ERROR",
+}
+
+class ConsumePushMessage {
+  constructor(public readonly record: Record, public readonly  offset:string){}
+  public static tryCast(json: string): ConsumePushMessage | undefined {
+    try{
+      const a = JSON.parse(json);
+
+      if(a.record === undefined){
+        return undefined;
+      }
+
+      if(a.offset === undefined){
+        return undefined;
+      }
+
+      return new ConsumePushMessage(a.record, a.offset);
+    }catch{
+      return undefined;
+    }
+  }
+}
+
+class Record {
+  constructor(public readonly headers: Map<string,string> | null,
+              public readonly key: {} | null,
+              public readonly value: {} | null){}
 }

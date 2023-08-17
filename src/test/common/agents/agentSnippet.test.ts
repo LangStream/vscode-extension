@@ -3,7 +3,7 @@ import {snippetToYaml} from "../../../utils/snippetsToYaml";
 import AgentSnippet from "../../../common/agents/agentSnippet";
 
 describe("Agent snippet tests", () => {
-  let snippetsFolderPath = "c:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\snippets\\ai-actions-yaml.json";
+  let snippetsFolderPath = "c:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\snippets\\ai-actions-yaml.json";
   let agentSnippet: AgentSnippet;
 
   beforeEach(() => {

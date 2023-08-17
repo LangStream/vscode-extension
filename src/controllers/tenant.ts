@@ -7,7 +7,6 @@ import TenantService from "../services/tenant";
 import WatchTenantDeletingTask from "../services/watchTenantDeletingTask";
 import ProgressRunner from "../common/progressRunner";
 import {IControlPlaneNode} from "../providers/controlPlaneTreeData/nodes/controlPlane";
-import {URL} from "url";
 import WatchTenantAddingTask from "../services/watchTenantAddingTask";
 
 export default class TenantController {
@@ -20,7 +19,7 @@ export default class TenantController {
       return;
     }
 
-    const task = new WatchTenantDeletingTask(tenantName, tenantService, controlPlaneTreeProvider);
+    const task = new WatchTenantDeletingTask(tenantName, tenantService, () => controlPlaneTreeProvider.refresh(tenantNode));
 
     Logger.debug("Sending delete command");
     const deletePromises = Promise.all([
@@ -63,7 +62,7 @@ export default class TenantController {
     Logger.debug("Sending add command");
 
     const tenantService = new TenantService(controlPlaneNode.savedControlPlane);
-    const task = new WatchTenantAddingTask(tenantName, tenantService, controlPlaneTreeProvider);
+    const task = new WatchTenantAddingTask(tenantName, tenantService, () => controlPlaneTreeProvider.refresh(controlPlaneNode));
 
     const promises = Promise.all([
       tenantService.add(tenantName),

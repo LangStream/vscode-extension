@@ -28,7 +28,7 @@ export default class ComputeVertexEmbeddingsExampleApplication extends Streaming
           .setOutput("output-topic")
           .setConfigurationValue("model", "textembedding-gecko")
           .setConfigurationValue("embeddings-field", "value.embeddings")
-          .setConfigurationValue("text", "{{% value.name }} {{% value.description }}")
+          .setConfigurationValue("text", "{{{% value.name }}} {{{% value.description }}}")
           .asAgentConfiguration()
           ];
         }
@@ -41,11 +41,11 @@ export default class ComputeVertexEmbeddingsExampleApplication extends Streaming
           type: "vertex-configuration",
           name: "Google Vertex AI configuration",
           configuration: {
-            url: "{{ secrets.vertex-ai.url }}",
+            url: "{{{ secrets.vertex-ai.url }}}",
             serviceAccountJson: "{{{ secrets.vertex-ai.serviceAccountJson }}}",
-            token: "{{ secrets.vertex-ai.token }}",
-            region: "{{ secrets.vertex-ai.region }}",
-            project: "{{ secrets.vertex-ai.project }}",
+            token: "{{{ secrets.vertex-ai.token }}}",
+            region: "{{{ secrets.vertex-ai.region }}}",
+            project: "{{{ secrets.vertex-ai.project }}}",
           }
         }
       ],
@@ -66,6 +66,6 @@ export default class ComputeVertexEmbeddingsExampleApplication extends Streaming
       new KafkaSecret()
     ];
 
-    super(module, instance, configuration, secrets);
+    super("Vertex AI embeddings", module, instance, configuration, secrets);
   }
 }

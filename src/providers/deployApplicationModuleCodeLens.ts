@@ -100,6 +100,7 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       instancePath = adjacentFiles.instancePath;
       secretsPath = adjacentFiles.secretsPath;
       gatewaysPath = adjacentFiles.gatewaysPath;
+      pythonPath = adjacentFiles.pythonPath;
       controlPlane = discoveredApplication?.controlPlane;
       tenantName = discoveredApplication?.tenantName;
       storedApplication = discoveredApplication?.application;
@@ -144,11 +145,12 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       [deployableApplication]);
   }
 
-  private discoverAdjacentFiles(modulePath: string): {configurationPath?: string, instancePath?: string, secretsPath?: string, gatewaysPath?: string} {
+  private discoverAdjacentFiles(modulePath: string): {configurationPath?: string, instancePath?: string, secretsPath?: string, gatewaysPath?: string, pythonPath?: string} {
     let configurationPath: string | undefined = undefined;
     let instancePath: string | undefined = undefined;
     let secretsPath: string | undefined = undefined;
     let gatewaysPath: string | undefined = undefined;
+    let pythonPath: string | undefined = undefined;
 
     // Discover adjacent application files
     const thisDir = path.parse(modulePath).dir;
@@ -167,9 +169,11 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       }
     });
 
+    // Look in parent directory for instance.yaml and secrets.yaml and python files
     const parentDir = path.parse(thisDir).dir;
     fs.readdirSync(parentDir, { withFileTypes: true }).forEach((value:fs.Dirent) => {
-      if(value.isDirectory()){
+      if(value.isDirectory() && value.name.toLowerCase() === 'python'){
+        pythonPath = path.join(parentDir, value.name);
         return;
       }
 
@@ -187,7 +191,8 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       configurationPath,
       instancePath,
       secretsPath,
-      gatewaysPath
+      gatewaysPath,
+      pythonPath
     };
   }
 

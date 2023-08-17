@@ -12,14 +12,15 @@ let messageManager;
 
 function sendUserMessage(gatewayId, text){
   sendMsg("userMessage", text, gatewayId, true);
+  document.getElementById('message-text').value = "";
 }
 
 function sendMsg(command, text, gatewayId, addToMessagesList = false) {
-  let message = { command: command, text: text, gatewayId: gatewayId };
   if(addToMessagesList === true){
-    messageManager.add(message);
+    messageManager.add({ command: command, text: {record: { headers: null, key: null, value: text}}, gatewayId: gatewayId });
   }
-  vscode.postMessage(message);
+
+  vscode.postMessage({ command: command, text: text, gatewayId: gatewayId });
 }
 
 function enableButton(){
@@ -53,7 +54,10 @@ window.addEventListener('message', event => {
           break;
       }
       break;
-    case "gatewayMessage" :
+    case "produceResponse" :
+      messageManager.add(messageData);
+      break;
+    case "consumeMessage" :
       messageManager.add(messageData);
       break;
     default: // info
@@ -70,6 +74,7 @@ window.addEventListener('load', event => {
     let listItem = document.createElement("li");
     listItem.classList.add("list-group-item");
     listItem.classList.add("border-0");
+    listItem.classList.add("p-0");
     listItem.innerHTML = `<table class="table"><tbody>
                             <tr><td class="text-muted">id</td><td>${agent.id}</td></tr>
                             <tr><td class="text-muted">name</td><td>${agent.name || "-"}</td></tr>
@@ -85,6 +90,7 @@ window.addEventListener('load', event => {
     let listItem = document.createElement("li");
     listItem.classList.add("list-group-item");
     listItem.classList.add("border-0");
+    listItem.classList.add("p-0");
     listItem.innerHTML = `<table class="table"><tbody>
                             <tr><td class="text-muted">id</td><td>${gateway.id}</td></tr>
                             <tr><td class="text-muted">type</td><td>${gateway.type}</td></tr>

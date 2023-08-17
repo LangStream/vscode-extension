@@ -5,11 +5,11 @@ import * as fs from "fs";
 
 describe("Zip util tests", () => {
   it("should zip up files", async () => {
-    const zipFilePath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\utils\\test.zip";
-    const modulePath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\application\\pipeline.yaml";
-    const configurationPath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\application\\configuration.yaml";
-    const instancePath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\instance.yaml";
-    const secretsPath = "C:\\Users\\ddieruf\\source\\riptano\\streaming-gen-ai-vscode\\src\\test\\assets\\test-app\\secrets.yaml";
+    const zipFilePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\utils\\test.zip";
+    const modulePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\pipeline.yaml";
+    const configurationPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\configuration.yaml";
+    const instancePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\instance.yaml";
+    const secretsPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\secrets.yaml";
 
     const files:[zipPath: string, diskPath: fs.PathLike][] = [["application/pipeline.yaml", modulePath], ["instance.yaml", instancePath]];
     if(configurationPath){files.push(["application/configuration.yaml", configurationPath]);}

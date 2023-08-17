@@ -32,7 +32,7 @@ export default class OpenAICompletionExampleApplication extends StreamingApplica
           .setConfigurationValue("messages", [
             {
               "role": "user",
-              "content": "{What can you tell me about {{% value}} ?"
+              "content": "{What can you tell me about {{{% value}}} ?"
             }
           ])
           .asAgentConfiguration()
@@ -48,8 +48,8 @@ export default class OpenAICompletionExampleApplication extends StreamingApplica
           type: "open-ai-configuration",
           name: "OpenAI Azure configuration",
           configuration: {
-            url: "{{ secrets.open-ai.url }}",
-            "access-key": "{{ secrets.open-ai.access-key }}",
+            url: "{{{ secrets.open-ai.url }}}",
+            "access-key": "{{{ secrets.open-ai.access-key }}}",
             provider: "azure"
           }
         }
@@ -69,6 +69,6 @@ export default class OpenAICompletionExampleApplication extends StreamingApplica
       new KafkaSecret()
     ];
 
-    super(module, instance, configuration, secrets);
+    super("OpenAI completions", module, instance, configuration, secrets);
   }
 }
