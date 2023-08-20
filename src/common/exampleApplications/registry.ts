@@ -1,4 +1,3 @@
-import StreamingApplication from "../streamingApplication";
 import CassandraSinkExampleApplication from "./cassandraSink";
 import ComputeOpenAIEmbeddingsExampleApplication from "./computeOpenAIEmbeddings";
 import ComputeVertexEmbeddingsExampleApplication from "./computeVertexAIEmbeddings";
@@ -10,10 +9,11 @@ import ScaffoldExampleApplication from "./scaffold";
 import SimpleTextProcessingExampleApplication from "./simpleTextProcessing";
 import PythonSourceScaffoldExampleApplication from "./pythonSourceScaffold";
 import PythonFunctionScaffoldExampleApplication from "./pythonFunctionScaffold";
+import {IExampleApplication} from "../../interfaces/iExampleApplication";
 
 export default class ExampleApplicationRegistry {
   private static _instance: ExampleApplicationRegistry;
-  private _exampleApplications: StreamingApplication[] = [];
+  private _exampleApplications: IExampleApplication[] = [];
 
   public static get instance(): ExampleApplicationRegistry {
     if (!ExampleApplicationRegistry._instance) {
@@ -23,12 +23,12 @@ export default class ExampleApplicationRegistry {
     return ExampleApplicationRegistry._instance;
   }
 
-  public get exampleApplications(): StreamingApplication[] {
+  public get exampleApplications(): IExampleApplication[] {
     return this._exampleApplications;
   }
 
-  public registerExampleApplication(streamingApplication: StreamingApplication): void {
-    this._exampleApplications.push(streamingApplication);
+  public registerExampleApplication(exampleApplication: IExampleApplication): void {
+    this._exampleApplications.push(exampleApplication);
   }
 
   public registerAllExampleApplications(extensionUriPath: string): void {

@@ -1,39 +1,19 @@
 /* eslint @typescript-eslint/naming-convention: 0 */
-import StreamingApplication from "../streamingApplication";
 import {AIActionAgent, AIActionType} from "../agents/aiAction";
 import KafkaKubernetesInstance from "../instances/kafkaKubernetes";
 import KafkaSecret from "../secrets/kafka";
-import {Pipeline} from "../../services/controlPlaneApi/gen";
+import {IExampleApplication} from "../../interfaces/iExampleApplication";
+import SimpleConsumeGateway from "../gateways/simpleConsume";
+import SimpleProduceGateway from "../gateways/simpleProduce";
 
-export default class ComputeOpenAIEmbeddingsExampleApplication extends StreamingApplication {
-  constructor(snippetsDirPath: string) {
-    const module = {
-      name: "Compute embeddings example application using OpenAI",
-      topics: [
-        {
-          "name": "input-topic",
-          "creation-mode": "create-if-not-exists"
-        },
-        {
-          "name": "output-topic",
-          "creation-mode": "create-if-not-exists"
-        }
-      ],
-      pipeline: [
-        new class implements Pipeline {
-          name = "cassandra-sink";
-          agents = [
-            new AIActionAgent(AIActionType.computeAiEmbeddings, snippetsDirPath)
-              .setInput("input-topic")
-              .setOutput("output-topic")
-              .setConfigurationValue("model", "text-embedding-ada-002")
-              .asAgentConfiguration()
-          ];
-        }
-      ]
-    };
-    const instance = new KafkaKubernetesInstance();
-    const configuration = {
+export default class ComputeOpenAIEmbeddingsExampleApplication implements IExampleApplication {
+  constructor(private readonly snippetsDirPath: string) {}
+  public get exampleApplicationName(){
+    return "Compute OpenAI embeddings";
+  }
+
+  public get configuration() {
+    return {
       resources: [
         {
           type: "open-ai-configuration",
@@ -47,7 +27,42 @@ export default class ComputeOpenAIEmbeddingsExampleApplication extends Streaming
       ],
       dependencies: []
     };
-    const secrets = [
+  }
+  public get gateways() {
+    return [
+      new SimpleProduceGateway(),
+      new SimpleConsumeGateway()
+    ];
+  }
+  public get instance() {
+    return new KafkaKubernetesInstance();
+  }
+  public get modules() {
+    return [
+      {
+        name: "Compute embeddings example application using OpenAI",
+        topics: [
+          {
+            "name": "input-topic",
+            "creation-mode": "create-if-not-exists"
+          },
+          {
+            "name": "output-topic",
+            "creation-mode": "create-if-not-exists"
+          }
+        ],
+        pipelines: [
+          new AIActionAgent(AIActionType.computeAiEmbeddings, this.snippetsDirPath)
+            .setInput("input-topic")
+            .setOutput("output-topic")
+            .setConfigurationValue("model", "text-embedding-ada-002")
+            .asAgentConfiguration()
+        ]
+      }
+      ];
+  }
+  public get secrets() {
+    return [
       {
         name: "open-ai",
         id: "open-ai",
@@ -58,7 +73,5 @@ export default class ComputeOpenAIEmbeddingsExampleApplication extends Streaming
       },
       new KafkaSecret()
     ];
-
-    super("Open AI embeddings", module, instance, configuration, secrets);
   }
 }

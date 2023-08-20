@@ -1,6 +1,6 @@
 import ControlPlaneApi from "./controlPlaneApi";
-import {ApplicationRuntimeInfo, StoredApplication, TenantConfiguration} from "./controlPlaneApi/gen";
-import axios, {Axios, AxiosError, AxiosRequestConfig, AxiosResponse} from "axios";
+import {ApplicationDescription, TenantConfiguration} from "./controlPlaneApi/gen/models";
+import axios, {Axios, AxiosError, AxiosRequestConfig} from "axios";
 import * as path from "path";
 import * as fs from "fs";
 import {sleep} from "../utils/sleep";
@@ -25,7 +25,7 @@ export default class ControlPlaneService {
     }
   }
 
-  protected async queryControlPlaneClient<T>(fn: Promise<any>, def: T, errorOnNotFound: boolean = true): Promise<T> {
+  private async queryControlPlaneClient<T>(fn: Promise<any>, def: T, errorOnNotFound: boolean = true): Promise<T> {
     return new Promise((resolve, reject) => {
       fn.then((response: any) => {
         if (response.status > 199 && response.status < 300) {
@@ -82,13 +82,12 @@ export default class ControlPlaneService {
 
   public async listApplicationIds(tenantName: string): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
-      this.queryControlPlaneClient<{[p: string]: StoredApplication}>(this.client.applications().getApplications(tenantName), {}).then((storedApplications: {[p: string]: StoredApplication} ) => {
+      this.queryControlPlaneClient<ApplicationDescription[]>(this.client.applications().getApplications(tenantName), []).then((applicationDescriptions) => {
         const applicationIds: string[] = [];
 
-        Object.keys(storedApplications).forEach((key) => {
-          const value = storedApplications[key];
-          if(value?.applicationId !== undefined) {
-            applicationIds.push(value.applicationId);
+        applicationDescriptions.forEach((appDesc) => {
+          if(appDesc["application-id"] !== undefined) {
+            applicationIds.push(appDesc["application-id"]);
           }
         });
 
@@ -99,12 +98,8 @@ export default class ControlPlaneService {
     });
   }
 
-  public async getApplication(tenantName: string, applicationName: string): Promise<StoredApplication | undefined> {
-    return this.queryControlPlaneClient<StoredApplication | undefined>(this.client.applications().getApplication(tenantName, applicationName), undefined, false);
-  }
-
-  public async getApplicationRuntimeInfo(tenantName: string, applicationName: string): Promise<ApplicationRuntimeInfo | undefined> {
-    return this.queryControlPlaneClient<ApplicationRuntimeInfo | undefined>(this.client.applications().getApplicationRuntimeInfo(tenantName, applicationName), undefined, false);
+  public async getApplication(tenantName: string, applicationName: string): Promise<ApplicationDescription | undefined> {
+    return this.queryControlPlaneClient<ApplicationDescription | undefined>(this.client.applications().getApplication(tenantName, applicationName), undefined, false);
   }
 
   public async deleteTenant(tenantName: string): Promise<void> {
@@ -119,7 +114,11 @@ export default class ControlPlaneService {
     return this.queryControlPlaneClient<void>(this.client.tenants().putTenant(tenantName), undefined, true);
   }
 
-  public async deployApplication(tenantName: string, applicationId: string, applicationArtifactPath: fs.PathLike): Promise<void> {
+  public async deployApplication(tenantName: string,
+                                 applicationId: string,
+                                 applicationArtifactPath: fs.PathLike,
+                                 instanceManifestPath: fs.PathLike,
+                                 secretsManifestPath?: fs.PathLike): Promise<void> {
     const options: AxiosRequestConfig = {
       headers: {
         // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -133,12 +132,25 @@ export default class ControlPlaneService {
     const url = new URL(this.webServiceUrl);
     url.pathname = path.join("api", "applications", <string>tenantName, <string>applicationId);
 
+    const data:any = {
+      app: fs.createReadStream(applicationArtifactPath),
+      instance: fs.readFileSync(instanceManifestPath)
+    };
+
+    if(secretsManifestPath !== undefined) {
+      data.secrets = fs.readFileSync(secretsManifestPath);
+    }
+
     return this.queryControlPlaneClient<void>(
-      new Axios(options).post(url.href, {file: fs.createReadStream(applicationArtifactPath)}),
+      new Axios(options).post(url.href, data),
       undefined);
   }
 
-  public async updateApplication(tenantName: string, applicationId: string, applicationArtifactPath: fs.PathLike): Promise<void> {
+  public async updateApplication(tenantName: string,
+                                 applicationId: string,
+                                applicationArtifactPath: fs.PathLike,
+                                instanceManifestPath: fs.PathLike,
+                                secretsManifestPath?: fs.PathLike): Promise<void> {
     const options: AxiosRequestConfig = {
       headers: {
         // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -152,8 +164,17 @@ export default class ControlPlaneService {
     const url = new URL(this.webServiceUrl);
     url.pathname = path.join("api", "applications", <string>tenantName, <string>applicationId);
 
+    const data:any = {
+      app: fs.createReadStream(applicationArtifactPath),
+      instance: fs.readFileSync(instanceManifestPath)
+    };
+
+    if(secretsManifestPath !== undefined) {
+      data.secrets = fs.readFileSync(secretsManifestPath);
+    }
+
     return this.queryControlPlaneClient<void>(
-      new Axios(options).put(url.href, {file: fs.createReadStream(applicationArtifactPath)}),
+      new Axios(options).patch(url.href, data),
       undefined);
   }
 

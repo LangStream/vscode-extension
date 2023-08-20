@@ -1,39 +1,47 @@
 import KafkaKubernetesInstance from "../instances/kafkaKubernetes";
 import KafkaSecret from "../secrets/kafka";
-import StreamingApplication from "../streamingApplication";
 import SimpleProduceGateway from "../gateways/simpleProduce";
 import SimpleConsumeGateway from "../gateways/simpleConsume";
+import {IExampleApplication} from "../../interfaces/iExampleApplication";
 
-export default class ScaffoldExampleApplication extends StreamingApplication {
-  public constructor() {
-    const module = {
-      name: "LangStream Application Scaffolding",
-      topics: [
-        {
-          "name": "input-topic",
-          "creation-mode": "create-if-not-exists"
-        },
-        {
-          "name": "output-topic",
-          "creation-mode": "create-if-not-exists"
-        }
-      ],
-      pipeline: [
-      ]
-    };
-    const instance = new KafkaKubernetesInstance();
-    const configuration = {
+export default class ScaffoldExampleApplication implements IExampleApplication {
+  constructor() {}
+  public get exampleApplicationName(){
+    return "Basic scaffolding";
+  }
+  public get configuration() {
+    return {
       resources: [],
       dependencies: []
     };
-    const secrets = [
-      new KafkaSecret()
-    ];
-    const gateways = [
+  }
+  public get gateways() {
+    return [
       new SimpleProduceGateway(),
       new SimpleConsumeGateway()
     ];
-
-    super("Application scaffolding", module, instance, configuration, secrets, gateways);
+  }
+  public get instance() {
+    return new KafkaKubernetesInstance();
+  }
+  public get modules() {
+    return [
+      {
+        name: "LangStream application scaffolding",
+        topics: [{
+          name: "input-topic",
+          "creation-mode": "create-if-not-exists"
+        },{
+          name: "output-topic",
+          "creation-mode": "create-if-not-exists"
+        }],
+        pipelines: []
+      }
+    ];
+  }
+  public get secrets() {
+    return [
+      new KafkaSecret()
+    ];
   }
 }

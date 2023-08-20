@@ -1,11 +1,10 @@
 import {TenantConfiguration} from "./controlPlaneApi/gen";
 import {ProgressReport, TObservableTask} from "../types/tObservableTask";
-import ControlPlaneTreeDataProvider from "../providers/controlPlaneTreeData/explorer";
 import {window} from "vscode";
 import TenantService from "./tenant";
 
 export default class WatchTenantDeletingTask implements TObservableTask<TenantConfiguration> {
-  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly progressCallBack: () => void) {
+  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly progressCallBack: () => Promise<void>) {
   }
 
   action = () => {

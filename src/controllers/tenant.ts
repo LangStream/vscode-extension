@@ -19,7 +19,9 @@ export default class TenantController {
       return;
     }
 
-    const task = new WatchTenantDeletingTask(tenantName, tenantService, () => controlPlaneTreeProvider.refresh(tenantNode));
+    const task = new WatchTenantDeletingTask(tenantName, tenantService, () => new Promise<void>(() => {
+      controlPlaneTreeProvider.refresh(tenantNode);
+    }));
 
     Logger.debug("Sending delete command");
     const deletePromises = Promise.all([
@@ -62,7 +64,9 @@ export default class TenantController {
     Logger.debug("Sending add command");
 
     const tenantService = new TenantService(controlPlaneNode.savedControlPlane);
-    const task = new WatchTenantAddingTask(tenantName, tenantService, () => controlPlaneTreeProvider.refresh(controlPlaneNode));
+    const task = new WatchTenantAddingTask(tenantName, tenantService, () => new Promise<void>(() => {
+      controlPlaneTreeProvider.refresh(controlPlaneNode);
+    }));
 
     const promises = Promise.all([
       tenantService.add(tenantName),

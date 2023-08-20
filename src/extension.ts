@@ -11,10 +11,10 @@ import TenantController from "./controllers/tenant";
 import {IApplicationNode} from "./providers/controlPlaneTreeData/nodes/application";
 import ApplicationController from "./controllers/application";
 import DeployApplicationModuleCodeLens from "./providers/deployApplicationModuleCodeLens";
-import {IWorkerNode} from "./providers/controlPlaneTreeData/nodes/worker";
-import TDeployableApplication from "./types/tDeployableApplication";
 import ExampleApplicationRegistry from "./common/exampleApplications/registry";
 import * as path from "path";
+import {IGatewayNode} from "./providers/controlPlaneTreeData/nodes/gateway";
+import TDeployableApplication from "./types/tDeployableApplication";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
 	Logger.info('Welcome to the Ai Streams extension. There are many wonderful things to see and click.');
@@ -49,8 +49,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		registerCommand(Constants.COMMAND_DEPLOY_APPLICATION, (deployableApplication: TDeployableApplication) => ApplicationController.deploy(controlPlaneTreeProvider, context, deployableApplication)),
 		registerCommand(Constants.COMMAND_UPDATE_APPLICATION, (deployableApplication: TDeployableApplication) => ApplicationController.deploy(controlPlaneTreeProvider, context, deployableApplication)),
 		registerCommand(Constants.COMMAND_VIEW_APPLICATION_DETAILS, (explorerNode: IApplicationNode) => ApplicationController.viewDetails(explorerNode)),
-		registerCommand(Constants.COMMAND_VIEW_WORKER_LOGS, (explorerNode: IWorkerNode) => ApplicationController.viewWorkerLogs(explorerNode)),
-		registerCommand(Constants.COMMAND_VIEW_APPLICATION_RUNTIME, (explorerNode: IApplicationNode) => ApplicationController.viewRuntimeInfo(explorerNode)),
 		registerCommand(Constants.COMMAND_OPEN_GATEWAY_EDITOR, (explorerNode: IApplicationNode) => ApplicationController.openGatewayCustomEditor(explorerNode)),
 		registerCommand(Constants.COMMAND_OPEN_APP_LOGS_EDITOR, (explorerNode: IApplicationNode) => ApplicationController.openAppLogsCustomEditor(explorerNode)),
 		registerCommand(Constants.COMMAND_OPEN_APP_LOGS_FROM_DEPLOY, ApplicationController.openAppLogsCustomEditorFromDeploy),

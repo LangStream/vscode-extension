@@ -1,13 +1,13 @@
-import {ApplicationLifecycleStatusStatusEnum, StoredApplication} from "./controlPlaneApi/gen";
 import {ProgressReport, TObservableTask} from "../types/tObservableTask";
 import {window} from "vscode";
 import ApplicationService from "./application";
+import {ApplicationDescription, ApplicationLifecycleStatusStatusEnum} from "./controlPlaneApi/gen";
 
-export default class WatchApplicationDeletingTask implements TObservableTask<StoredApplication> {
+export default class WatchApplicationDeletingTask implements TObservableTask<ApplicationDescription> {
   constructor(private readonly tenantName: string,
               private readonly applicationId: string,
               private readonly applicationService: ApplicationService,
-              private readonly progressCallBack: () => void) {
+              private readonly progressCallBack: () => Promise<void>) {
   }
 
   action = () => {
@@ -16,8 +16,8 @@ export default class WatchApplicationDeletingTask implements TObservableTask<Sto
   errorThreshold = 0;
   pollingInterval = 1000;
   timeout = 120000;
-  complete = (hasErrors: boolean, storedApplication?: StoredApplication) => {
-    return (hasErrors || storedApplication === undefined);
+  complete = (hasErrors: boolean, applicationDescription?: ApplicationDescription) => {
+    return (hasErrors || applicationDescription === undefined);
   };
   onProgress = (/*storedApplication?: StoredApplication*/) => {
     //console.log(storedApplication);
@@ -47,7 +47,7 @@ export default class WatchApplicationDeletingTask implements TObservableTask<Sto
 
     window.showInformationMessage(`Application ${this.tenantName}/${this.applicationId} deleted`);
   };
-  hasErrors = (actionResult: StoredApplication | undefined) => {
+  hasErrors = (actionResult: ApplicationDescription | undefined) => {
     return actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.errorDeleting;
   };
 };

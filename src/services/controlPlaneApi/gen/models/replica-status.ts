@@ -13,45 +13,48 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import { AgentStatus } from './agent-status';
 
 /**
  * 
  * @export
- * @interface AgentWorkerStatus
+ * @interface ReplicaStatus
  */
-export interface AgentWorkerStatus {
+export interface ReplicaStatus {
     /**
      * 
      * @type {string}
-     * @memberof AgentWorkerStatus
+     * @memberof ReplicaStatus
      */
-    'status'?: AgentWorkerStatusStatusEnum;
+    'id'?: string;
     /**
      * 
      * @type {string}
-     * @memberof AgentWorkerStatus
+     * @memberof ReplicaStatus
+     */
+    'status'?: ReplicaStatusStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof ReplicaStatus
      */
     'reason'?: string;
     /**
      * 
-     * @type {string}
-     * @memberof AgentWorkerStatus
+     * @type {Array<AgentStatus>}
+     * @memberof ReplicaStatus
      */
-    'url'?: string;
-    /**
-     * 
-     * @type {{ [key: string]: object; }}
-     * @memberof AgentWorkerStatus
-     */
-    'info'?: { [key: string]: object; };
+    'agents'?: Array<AgentStatus>;
 }
 
-export const AgentWorkerStatusStatusEnum = {
+export const ReplicaStatusStatusEnum = {
     initializing: 'INITIALIZING',
     running: 'RUNNING',
     error: 'ERROR'
 } as const;
 
-export type AgentWorkerStatusStatusEnum = typeof AgentWorkerStatusStatusEnum[keyof typeof AgentWorkerStatusStatusEnum];
+export type ReplicaStatusStatusEnum = typeof ReplicaStatusStatusEnum[keyof typeof ReplicaStatusStatusEnum];
 
 

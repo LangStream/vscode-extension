@@ -1,9 +1,9 @@
 import CassandraSinkExampleApplication from "../../../common/exampleApplications/cassandraSink";
 import {
-  ApplicationLifecycleStatusStatusEnum, Dependency,
+  ApplicationDescription,
+  ApplicationLifecycleStatusStatusEnum,
   Gateway,
-  GatewayTypeEnum,
-  StoredApplication
+  GatewayTypeEnum
 } from "../../../services/controlPlaneApi/gen";
 import {TSavedControlPlane} from "../../../types/tSavedControlPlane";
 import ApplicationService from "../../../services/application";
@@ -14,38 +14,45 @@ import KafkaSecret from "../../../common/secrets/kafka";
 import CassandraSecret from "../../../common/secrets/cassandra";
 import * as yaml from 'yaml';
 import TDeployableApplication from "../../../types/tDeployableApplication";
+import {downloadDependencies} from "../../../utils/downloadDependencies";
+import {IDependency} from "../../../interfaces/iDependency";
+import {TArtifactItem} from "../../../types/tArtifactItem";
+import {zipFiles} from "../../../utils/zip";
+import {writeApplicationAsFiles} from "../../../utils/writeApplicationAsFiles";
+import * as path from "path";
 
 describe("Cassandra sink example application tests", () => {
-  const snippetsDirPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\snippets";
-  const applicationFolder = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\common\\exampleApplications\\temp";
-  const zipFilePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\common\\exampleApplications\\temp.zip";
+  const snippetsDirPath = path.join(__dirname, "..", "..", "..", "..", "snippets");
+  const applicationFolder = path.join(__dirname,"temp");
+  const zipFilePath = path.join(__dirname,"temp.zip");
+  const secrets = fs.readFileSync(path.join(__dirname, "..", "..", "assets", "secrets-for-test.yaml"));
   const savedControlPane: TSavedControlPlane = {
     name: "test",
     webServiceUrl: "http://localhost:8090",
     apiGatewayUrl: "ws://localhost:8091",
   };
-  let secretsForTests: any;
   let applicationService: ApplicationService;
+  let exampleApplication: CassandraSinkExampleApplication;
 
   before(() => {
-    const f = fs.readFileSync("C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\secrets-for-test.yaml");
-    secretsForTests = yaml.parse(f.toString());
+    const secretsForTests = yaml.parse(secrets.toString());
     applicationService = new ApplicationService(savedControlPane);
+
+    const kafkaSecret = new KafkaSecret(secretsForTests.kafka["bootstrap-servers"], secretsForTests.kafka["username"], secretsForTests.kafka["password"]);
+    const cassandraSecret = new CassandraSecret(secretsForTests.cassandra["secure-connect-bundle"], secretsForTests.cassandra["username"], secretsForTests.cassandra["password"]);
+    exampleApplication = new CassandraSinkExampleApplication(snippetsDirPath, kafkaSecret, cassandraSecret);
   });
 
   it("should be a valid application", async () => {
-    const sampleApplication = new CassandraSinkExampleApplication(snippetsDirPath);
-
-    //const firstPipeline = sampleApplication.Module.pipeline[0];
-    const firstAgent = sampleApplication.Module.pipeline[0];
+    const firstAgent = exampleApplication.modules[0].pipelines[0];
 
     // Check topics
-    expect(sampleApplication.Module.topics[0].name).to.equal("input-topic");
+    expect(exampleApplication.modules[0].topics[0].name).to.equal("input-topic");
     expect(firstAgent.input).to.equal("input-topic");
     expect(firstAgent.output).to.be.undefined;
 
     // Match topics to gateways
-    sampleApplication.Gateways.forEach((gateway:Gateway) => {
+    exampleApplication.gateways.forEach((gateway:Gateway) => {
       switch (gateway.type){
         case GatewayTypeEnum.produce:
           expect(firstAgent.input).to.equal(gateway.topic);
@@ -60,22 +67,24 @@ describe("Cassandra sink example application tests", () => {
     expect(firstAgent.type).to.equal("sink");
 
     // Check configurations & secrets
-    sampleApplication.Secrets.forEach((secret) => {
+    exampleApplication.secrets.forEach((secret) => {
       switch (secret.name){
         case "kafka":
-          const admin:any = sampleApplication.Instance.streamingCluster.configuration!["admin"];
+          const admin:any = exampleApplication.instance.streamingCluster.configuration!["admin"];
 
+          // @ts-ignore
           expect(secret.data["bootstrap-servers"]).to.not.be.undefined;
-          expect(admin["bootstrap.servers"]).to.equal("{{ secrets.kafka.bootstrap-servers }}");
+          expect(admin["bootstrap.servers"]).to.equal("{{{ secrets.kafka.bootstrap-servers }}}");
 
           expect(secret.data["username"]).to.not.be.undefined;
-          expect(admin["sasl.jaas.config"]).to.contain("{{ secrets.kafka.username }}");
+          expect(admin["sasl.jaas.config"]).to.contain("{{{ secrets.kafka.username }}}");
 
           expect(secret.data["password"]).to.not.be.undefined;
-          expect(`{${admin["sasl.jaas.config"]}}`).to.contain("token:{{ secrets.kafka.password }}");
+          expect(`{${admin["sasl.jaas.config"]}}`).to.contain("{{{ secrets.kafka.password }}}");
           break;
 
         case "cassandra":
+          // @ts-ignore
           expect(secret.data["secure-connect-bundle"]).to.not.be.undefined;
           expect(firstAgent.configuration!["cloud.secureConnectBundle"]).to.equal("{{{ secrets.cassandra.secure-connect-bundle }}}");
 
@@ -89,18 +98,60 @@ describe("Cassandra sink example application tests", () => {
     });
   });
 
+  it("should write application as files", async () => {
+    cleanup(applicationFolder, zipFilePath);
+    const applicationFilePaths:TArtifactItem[] = writeApplicationAsFiles(applicationFolder, exampleApplication);
+
+    expect(applicationFilePaths).to.not.be.undefined;
+    expect(applicationFilePaths.length).to.equal(5);
+
+    // Test pipeline.yaml
+    const pipelinePath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("pipeline.yaml"))![1];
+    const module = yaml.parse(fs.readFileSync(pipelinePath).toString());
+    expect(module).to.not.be.undefined;
+    expect(module.name).to.equal(exampleApplication.modules[0].name);
+
+    // Topics
+    expect(module.topics[0].name).to.equal(exampleApplication.modules[0].topics[0].name);
+
+    // Agents
+    expect(module.pipeline[0]).to.not.be.undefined;
+    expect(module.pipeline[0].name).to.equal(exampleApplication.modules[0].pipelines[0].name);
+    // @ts-ignore
+    expect(module.pipeline[0].type).to.equal(exampleApplication.modules[0].pipelines[0].type);
+
+    // Test gateways.yaml
+    const gatewaysPath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("gateways.yaml"))![1];
+    const gateways = yaml.parse(fs.readFileSync(gatewaysPath).toString());
+    expect(gateways.gateways[0].type).to.equal(exampleApplication.gateways[0].type);
+
+    // Test configuration.yaml
+    const configurationPath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("configuration.yaml"))![1];
+    const configuration = yaml.parse(fs.readFileSync(configurationPath).toString());
+    expect(configuration.configuration.dependencies[0].name).to.equal(exampleApplication.configuration.dependencies[0].name);
+
+    // Test instance.yaml
+    const instancePath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("instance.yaml"))![1];
+    const instance = yaml.parse(fs.readFileSync(instancePath).toString());
+    expect(instance.instance.streamingCluster.type).to.equal(exampleApplication.instance.streamingCluster.type);
+
+    // Test secrets.yaml
+    const secretsPath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("secrets.yaml"))![1];
+    const secrets = yaml.parse(fs.readFileSync(secretsPath).toString());
+    expect(secrets.secrets[0].name).to.equal(exampleApplication.secrets[0].name);
+    expect(secrets.secrets[1].name).to.equal(exampleApplication.secrets[1].name);
+
+    cleanup(applicationFolder, zipFilePath);
+  });
+
   it("should successfully deploy to control plane", async () => {
     const tenantName = "default";
-    const applicationId = "test-cassandra-on-s4k";
-    const applicationService = new ApplicationService(savedControlPane);
+    const applicationId = "test-cassandra";
 
     cleanup(applicationFolder, zipFilePath);
 
-    const kafkaSecret = new KafkaSecret(secretsForTests.kafka["bootstrap-servers"], secretsForTests.kafka["username"], secretsForTests.kafka["password"]);
-    const cassandraSecret = new CassandraSecret(secretsForTests.cassandra["secure-connect-bundle"], secretsForTests.cassandra["username"], secretsForTests.cassandra["password"]);
-    const exampleApplication = new CassandraSinkExampleApplication(snippetsDirPath, kafkaSecret, cassandraSecret);
-    const applicationFilePaths = exampleApplication.writeAsFiles(applicationFolder);
-    const dependencyPaths = await applicationService.downloadDependencies(applicationFolder, exampleApplication.Configuration.dependencies);
+    const applicationFilePaths = writeApplicationAsFiles(applicationFolder, exampleApplication);
+    const dependencyPaths = await downloadDependencies(applicationFolder, exampleApplication.configuration.dependencies);
 
     const deployableApplication = new class implements TDeployableApplication {
       name = "Cassandra example";
@@ -111,21 +162,20 @@ describe("Cassandra sink example application tests", () => {
       instancePath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("instance.yaml"))?.[1];
       modulePath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("pipeline.yaml"))![1];
       secretsPath = applicationFilePaths.find(([zipPath]) => zipPath.endsWith("secrets.yaml"))?.[1];
-      storedApplication = undefined;
+      applicationDescription = undefined;
       tenantName = tenantName;
-      findDependencies(): Dependency[] { return []; }
+      findDependencies(): IDependency[] { return []; }
     };
 
-    await applicationService.zipApplication(zipFilePath,
-      deployableApplication.modulePath,
-      <string>deployableApplication.instancePath,
-      deployableApplication.configurationPath,
-      deployableApplication.secretsPath,
-      deployableApplication.gatewaysPath,
-      undefined,
-      dependencyPaths);
+    const artifactFiles: TArtifactItem[] = [];
+    artifactFiles.push(["pipeline.yaml", deployableApplication.modulePath]);
+    artifactFiles.push(["configuration.yaml", deployableApplication.configurationPath!]);
+    artifactFiles.push(["gateways.yaml", deployableApplication.gatewaysPath!]);
+    artifactFiles.push(...dependencyPaths);
 
-    await applicationService.deploy(tenantName, applicationId, zipFilePath);
+    await zipFiles(zipFilePath, artifactFiles);
+
+    await applicationService.deploy(tenantName, applicationId, zipFilePath, deployableApplication.instancePath!, deployableApplication.secretsPath!);
 
     const storedApp = await watchDeploy(applicationService, tenantName, applicationId);
     expect(storedApp).to.not.be.undefined;
@@ -142,16 +192,16 @@ function cleanup(applicationFolder:string, zipFilePath:string){
   }catch{}
 }
 
-async function watchDeploy(applicationService: ApplicationService, tenantName: string, applicationId: string): Promise<StoredApplication | undefined> {
+async function watchDeploy(applicationService: ApplicationService, tenantName: string, applicationId: string): Promise<ApplicationDescription | undefined> {
   let errored = false;
-  let storedApp: StoredApplication | undefined = undefined;
+  let storedApp: ApplicationDescription | undefined = undefined;
   const timer = setTimeout(() => {
     errored = true;
   }, 30 * 1000);
 
   while(!errored && (storedApp === undefined || storedApp?.status?.status?.status !== ApplicationLifecycleStatusStatusEnum.deployed)){
-    console.info("Status ", storedApp?.status?.status?.status);
     storedApp = await applicationService.get(tenantName, applicationId);
+    console.info("Status ", storedApp?.status?.status);
     await sleep(1000);
   }
 

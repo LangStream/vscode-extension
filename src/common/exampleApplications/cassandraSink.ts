@@ -1,36 +1,60 @@
 /* eslint @typescript-eslint/naming-convention: 0 */
-import StreamingApplication from "../streamingApplication";
 import {InputOutputActionType, InputOutputAgent} from "../agents/inputOutput";
 import KafkaKubernetesInstance from "../instances/kafkaKubernetes";
 import KafkaSecret from "../secrets/kafka";
 import CassandraSecret from "../secrets/cassandra";
+import {IExampleApplication} from "../../interfaces/iExampleApplication";
+import SimpleProduceGateway from "../gateways/simpleProduce";
+import {ISecret} from "../../interfaces/iSecret";
 
-export default class CassandraSinkExampleApplication extends StreamingApplication {
-  constructor(snippetsDirPath: string, kafkaSecret: KafkaSecret = new KafkaSecret(), cassandraSecret: CassandraSecret = new CassandraSecret()) {
-    const module = {
-      name: "Write to Cassandra",
-      topics: [{
-        name: "input-topic",
-        "creation-mode": "create-if-not-exists"
-      }],
-      pipeline: [
-        new InputOutputAgent(InputOutputActionType.cassandraSink, snippetsDirPath)
-          .setInput("input-topic")
-          .setOutput(null)
-          .setConfigurationValue("name", "cassandra-sink")
-          .setConfigurationValue("connector.class", "com.datastax.oss.kafka.sink.CassandraSinkConnector")
-          .setConfigurationValue("connector.class", "com.datastax.oss.kafka.sink.CassandraSinkConnector")
-          .setConfigurationValue("key.converter", "org.apache.kafka.connect.storage.StringConverter")
-          .setConfigurationValue("value.converter", "org.apache.kafka.connect.storage.StringConverter")
-          .setConfigurationValue("cloud.secureConnectBundle", "{{{ secrets.cassandra.secure-connect-bundle }}}")
-          .setConfigurationValue("auth.username", "{{{ secrets.cassandra.username }}}")
-          .setConfigurationValue("auth.password", "{{{ secrets.cassandra.password }}}")
-          .setConfigurationValue("topic.input-topic.vsearch.products.mapping", "id=value.id,description=value.description,name=value.name")
-          .asAgentConfiguration()
-      ]
-    };
-    const instance = new KafkaKubernetesInstance();
-    const configuration = {
+export default class CassandraSinkExampleApplication implements IExampleApplication {
+  constructor(private readonly snippetsDirPath: string, private readonly kafkaSecret: ISecret = new KafkaSecret(), private readonly cassandraSecret: ISecret = new CassandraSecret()) {}
+  public get exampleApplicationName(){
+    return "Sink to Cassandra database";
+  }
+  public get gateways(){
+    return [
+      new SimpleProduceGateway()
+    ];
+  }
+  public get instance() {
+    return new KafkaKubernetesInstance();
+  }
+  public get modules() {
+    return [
+      {
+        name: "Write to Cassandra",
+        topics: [{
+          name: "input-topic",
+          "creation-mode": "create-if-not-exists"
+        }],
+        pipelines: [
+          new InputOutputAgent(InputOutputActionType.cassandraSink, this.snippetsDirPath)
+            .setInput("input-topic")
+            .setOutput(null)
+            .setConfigurationValue("name", "cassandra-sink")
+            .setConfigurationValue("connector.class", "com.datastax.oss.kafka.sink.CassandraSinkConnector")
+            .setConfigurationValue("connector.class", "com.datastax.oss.kafka.sink.CassandraSinkConnector")
+            .setConfigurationValue("key.converter", "org.apache.kafka.connect.storage.StringConverter")
+            .setConfigurationValue("value.converter", "org.apache.kafka.connect.storage.StringConverter")
+            .setConfigurationValue("cloud.secureConnectBundle", "{{{ secrets.cassandra.secure-connect-bundle }}}")
+            .setConfigurationValue("auth.username", "{{{ secrets.cassandra.username }}}")
+            .setConfigurationValue("auth.password", "{{{ secrets.cassandra.password }}}")
+            .setConfigurationValue("topic.input-topic.vsearch.products.mapping", "id=value.id,description=value.description,name=value.name")
+            .asAgentConfiguration()
+        ]
+      }
+    ];
+  }
+  public get secrets() {
+    return [
+        this.kafkaSecret,
+        this.cassandraSecret
+      ];
+  }
+
+  public get configuration() {
+    return {
       resources: [],
       dependencies: [
         {
@@ -41,18 +65,5 @@ export default class CassandraSinkExampleApplication extends StreamingApplicatio
         }
       ]
     };
-    const secrets = [
-      kafkaSecret,
-      cassandraSecret
-    ];
-    const gateways = [
-      {
-        id: "produce-input",
-        type: "produce",
-        topic: "input-topic"
-      }
-    ];
-
-    super("Sink to Cassandra database", module, instance, configuration, secrets, gateways);
   }
 }

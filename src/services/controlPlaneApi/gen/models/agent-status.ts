@@ -15,10 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import { AgentLifecycleStatus } from './agent-lifecycle-status';
-// May contain unused imports in some cases
-// @ts-ignore
-import { AgentWorkerStatus } from './agent-worker-status';
+import { Metrics } from './metrics';
 
 /**
  * 
@@ -28,15 +25,33 @@ import { AgentWorkerStatus } from './agent-worker-status';
 export interface AgentStatus {
     /**
      * 
-     * @type {AgentLifecycleStatus}
+     * @type {string}
      * @memberof AgentStatus
      */
-    'status'?: AgentLifecycleStatus;
+    'agent-id'?: string;
     /**
      * 
-     * @type {{ [key: string]: AgentWorkerStatus; }}
+     * @type {string}
      * @memberof AgentStatus
      */
-    'workers'?: { [key: string]: AgentWorkerStatus; };
+    'agent-type'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentStatus
+     */
+    'component-type'?: string;
+    /**
+     * 
+     * @type {Metrics}
+     * @memberof AgentStatus
+     */
+    'metrics'?: Metrics;
+    /**
+     * 
+     * @type {{ [key: string]: object; }}
+     * @memberof AgentStatus
+     */
+    'info'?: { [key: string]: object; };
 }
 

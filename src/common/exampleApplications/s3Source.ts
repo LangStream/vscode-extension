@@ -1,44 +1,54 @@
-import StreamingApplication from "../streamingApplication";
 import KafkaKubernetesInstance from "../instances/kafkaKubernetes";
 import KafkaSecret from "../secrets/kafka";
 import S3Secret from "../secrets/s3";
 import {InputOutputActionType, InputOutputAgent} from "../agents/inputOutput";
-import {Pipeline} from "../../services/controlPlaneApi/gen";
+import {IExampleApplication} from "../../interfaces/iExampleApplication";
 
-export default class S3SourceExampleApplication extends StreamingApplication {
-  constructor(snippetsDirPath: string) {
-    const module = {
-      name: "AWS S3 data source",
-      topics: [{
-        name: "output-topic",
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        "creation-mode": "create-if-not-exists"
-      }],
-      pipeline: [
-        new class implements Pipeline {
-          name = "cassandra-sink";
-          agents = [
-        new InputOutputAgent(InputOutputActionType.s3Source, snippetsDirPath)
-          .setInput(null)
-          .setOutput("output-topic")
-          .setConfigurationValue("bucketName", "{{{secrets.aws-s3.bucket-name}}}")
-          .setConfigurationValue("endpoint", "{{{secrets.aws-s3.endpoint}}}")
-          .setConfigurationValue("access-key", "{{{secrets.aws-s3.access-key}}}")
-          .setConfigurationValue("secret-key", "{{{secrets.aws-s3.secret}}}")
-          .setConfigurationValue("region", "{{{secrets.aws-s3.region}}}")
-          .setConfigurationValue("idle-time", 5)
-          .asAgentConfiguration()
-          ];
-        }
-      ]
+export default class S3SourceExampleApplication implements IExampleApplication {
+  constructor(private readonly snippetsDirPath: string) {}
+  public get exampleApplicationName(){
+    return "AWS S3 source";
+  }
+  public get configuration() {
+    return {
+      resources: [],
+      dependencies: []
     };
-    const instance = new KafkaKubernetesInstance();
-    const configuration = undefined;
-    const secrets = [
+  }
+  public get gateways() {
+    return [];
+  }
+  public get instance() {
+    return new KafkaKubernetesInstance();
+  }
+  public get modules() {
+    return [
+      {
+        name: "AWS S3 data source",
+        topics: [{
+          name: "output-topic",
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          "creation-mode": "create-if-not-exists"
+        }],
+        pipelines: [
+          new InputOutputAgent(InputOutputActionType.s3Source, this.snippetsDirPath)
+            .setInput(null)
+            .setOutput("output-topic")
+            .setConfigurationValue("bucketName", "{{{secrets.aws-s3.bucket-name}}}")
+            .setConfigurationValue("endpoint", "{{{secrets.aws-s3.endpoint}}}")
+            .setConfigurationValue("access-key", "{{{secrets.aws-s3.access-key}}}")
+            .setConfigurationValue("secret-key", "{{{secrets.aws-s3.secret}}}")
+            .setConfigurationValue("region", "{{{secrets.aws-s3.region}}}")
+            .setConfigurationValue("idle-time", 5)
+            .asAgentConfiguration()
+        ]
+      }
+    ];
+  }
+  public get secrets() {
+    return [
       new KafkaSecret(),
       new S3Secret()
     ];
-
-    super("AWS S3 source", module, instance, configuration, secrets);
   }
 }

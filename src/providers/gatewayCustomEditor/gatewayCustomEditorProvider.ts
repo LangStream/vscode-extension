@@ -36,13 +36,6 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
       webviewPanel.dispose();
     });
 
-    // const consumeGateways = gatewayMessagesDocument.content.gatewayWebSockets.filter((gatewayWebSocket) => {
-    //   return gatewayWebSocket.gateway.type === GatewayTypeEnum.consume;
-    // });
-    //
-    // const produceGateways = gatewayMessagesDocument.content.gatewayWebSockets.filter((gatewayWebSocket) => {
-    //   return gatewayWebSocket.gateway.type === GatewayTypeEnum.produce;
-    // });
 
     webviewPanel.webview.onDidReceiveMessage((message) => {
       // Logger.info("Received message");
@@ -50,26 +43,6 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
       switch(message.command){
         case "ready":
           if(gatewayWebSockets?.length > 0){
-          //   // // The webview has been reset, re-send the messages
-          //   // GatewayMessagesDocument.content.messages.forEach((message: TTopicMessage) => {
-          //   //   webviewPanel.webview.postMessage(message);
-          //   // });
-          //
-          //   switch(websocket.readyState){
-          //     case WebSocket.OPEN:
-          //       webviewPanel.webview.postMessage({command: "connection", text: "opened"});
-          //       break;
-          //     case WebSocket.CLOSED:
-          //       webviewPanel.webview.postMessage({command: "connection", text: "closed"});
-          //       break;
-          //     case WebSocket.CLOSING:
-          //       webviewPanel.webview.postMessage({command: "connection", text: "closing"});
-          //       break;
-          //     case WebSocket.CONNECTING:
-          //       webviewPanel.webview.postMessage({command: "connection", text: "connecting"});
-          //       break;
-          //   }
-          //
             break; //The websocket is already open, most likely because the user moved the tab
           }
 
@@ -115,26 +88,6 @@ Logger.info(message);
 
                 Logger.warn("Received unknown message from gateway");
                 Logger.warn(message);
-
-                // Logger.info("Received message from consume gateway");
-                // Logger.info(data.toString());
-                //{
-                //     "command": "gatewayMessage",
-                //     "text": "{\"status\":\"PRODUCER_ERROR\",\"reason\":\"Cannot find a serializer for class java.util.LinkedHashMap\"}",
-                //     "gatewayId": "simple-produce"
-                // }
-
-                //{
-                //     "command": "userMessage",
-                //     "text": {
-                //         "record": {
-                //             "headers": null,
-                //             "key": null,
-                //             "value": "234234234"
-                //         }
-                //     },
-                //     "gatewayId": "simple-produce"
-                // }
               });
 
               gatewayWebSockets.push([gatewayWebSocket.gateway, websocket]);

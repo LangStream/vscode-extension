@@ -1,6 +1,7 @@
 import {TSavedControlPlane} from "./tSavedControlPlane";
-import {Dependency, StoredApplication} from "../services/controlPlaneApi/gen";
+import { ApplicationDescription} from "../services/controlPlaneApi/gen";
 import {PathLike} from "fs";
+import {IDependency} from "../interfaces/iDependency";
 
 export default interface TDeployableApplication {
   id:string;
@@ -13,7 +14,7 @@ export default interface TDeployableApplication {
   pythonPath?: PathLike;
   controlPlane?: TSavedControlPlane;
   tenantName?: string;
-  storedApplication?: StoredApplication;
+  applicationDescription?: ApplicationDescription;
 
-  findDependencies(): Dependency[];
+  findDependencies(): IDependency[];
 }

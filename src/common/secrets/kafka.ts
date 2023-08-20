@@ -1,4 +1,6 @@
-export default class KafkaSecret {
+import {ISecret} from "../../interfaces/iSecret";
+
+export default class KafkaSecret implements ISecret {
   constructor(bootStrapServers = "", username = "", password = "") {
     this.data["bootstrap-servers"] = bootStrapServers;
     this.data["username"] = username;

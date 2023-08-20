@@ -15,64 +15,46 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import { Dependency } from './dependency';
-// May contain unused imports in some cases
-// @ts-ignore
 import { Gateways } from './gateways';
 // May contain unused imports in some cases
 // @ts-ignore
 import { Instance } from './instance';
 // May contain unused imports in some cases
 // @ts-ignore
-import { Module } from './module';
+import { ModuleDefinition } from './module-definition';
 // May contain unused imports in some cases
 // @ts-ignore
 import { Resource } from './resource';
-// May contain unused imports in some cases
-// @ts-ignore
-import { Secrets } from './secrets';
 
 /**
  * 
  * @export
- * @interface Application
+ * @interface ApplicationDefinition
  */
-export interface Application {
+export interface ApplicationDefinition {
     /**
      * 
      * @type {{ [key: string]: Resource; }}
-     * @memberof Application
+     * @memberof ApplicationDefinition
      */
     'resources'?: { [key: string]: Resource; };
     /**
      * 
-     * @type {{ [key: string]: Module; }}
-     * @memberof Application
+     * @type {Array<ModuleDefinition>}
+     * @memberof ApplicationDefinition
      */
-    'modules'?: { [key: string]: Module; };
-    /**
-     * 
-     * @type {Array<Dependency>}
-     * @memberof Application
-     */
-    'dependencies'?: Array<Dependency>;
+    'modules'?: Array<ModuleDefinition>;
     /**
      * 
      * @type {Gateways}
-     * @memberof Application
+     * @memberof ApplicationDefinition
      */
     'gateways'?: Gateways;
     /**
      * 
      * @type {Instance}
-     * @memberof Application
+     * @memberof ApplicationDefinition
      */
     'instance'?: Instance;
-    /**
-     * 
-     * @type {Secrets}
-     * @memberof Application
-     */
-    'secrets'?: Secrets;
 }
 

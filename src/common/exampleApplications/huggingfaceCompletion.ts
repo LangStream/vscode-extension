@@ -1,43 +1,18 @@
 /* eslint @typescript-eslint/naming-convention: 0 */
-import StreamingApplication from "../streamingApplication";
 import KafkaKubernetesInstance from "../instances/kafkaKubernetes";
 import KafkaSecret from "../secrets/kafka";
 import {AIActionAgent, AIActionType} from "../agents/aiAction";
+import {IExampleApplication} from "../../interfaces/iExampleApplication";
+import SimpleProduceGateway from "../gateways/simpleProduce";
+import SimpleConsumeGateway from "../gateways/simpleConsume";
 
-export default class HuggingfaceCompletionExampleApplication extends StreamingApplication {
-  constructor(snippetsDirPath: string) {
-    const module = {
-      name: "Hugging-face completion example application",
-        topics: [
-      {
-        "name": "input-topic",
-        "creation-mode": "create-if-not-exists"
-      },
-      {
-        "name": "output-topic",
-        "creation-mode": "create-if-not-exists"
-      }
-    ],
-      pipeline: [
-        new AIActionAgent(AIActionType.aiChatCompletions, snippetsDirPath)
-          .setInput("input-topic")
-          .setOutput("output-topic")
-          .setConfigurationValue("model", "bert-base-uncased")
-          .setConfigurationValue("completion-field", "value.completion")
-          .setConfigurationValue("log-field", "value.fullPrompt")
-          .setConfigurationValue("messages", [
-            {
-              "role": "user",
-              "content": "{{% value }} [MASK]"
-            }
-          ])
-          .asAgentConfiguration()
-      ]
-    };
-
-    const instance = new KafkaKubernetesInstance();
-
-    const configuration = {
+export default class HuggingfaceCompletionExampleApplication implements IExampleApplication {
+  constructor(private readonly snippetsDirPath: string) {}
+  public get exampleApplicationName(){
+    return "Huggingface completions";
+  }
+  public get configuration() {
+    return {
       resources: [
         {
           type: "hugging-face-configuration",
@@ -47,10 +22,52 @@ export default class HuggingfaceCompletionExampleApplication extends StreamingAp
           }
         }
       ],
-        dependencies: []
+      dependencies: []
     };
-
-    const secrets = [
+  }
+  public get gateways() {
+    return [
+      new SimpleProduceGateway(),
+      new SimpleConsumeGateway()
+    ];
+  }
+  public get instance() {
+    return  new KafkaKubernetesInstance();
+  }
+  public get modules() {
+    return [
+      {
+        name: "Hugging-face completion example application",
+        topics: [
+          {
+            "name": "input-topic",
+            "creation-mode": "create-if-not-exists"
+          },
+          {
+            "name": "output-topic",
+            "creation-mode": "create-if-not-exists"
+          }
+        ],
+        pipelines: [
+          new AIActionAgent(AIActionType.aiChatCompletions, this.snippetsDirPath)
+            .setInput("input-topic")
+            .setOutput("output-topic")
+            .setConfigurationValue("model", "bert-base-uncased")
+            .setConfigurationValue("completion-field", "value.completion")
+            .setConfigurationValue("log-field", "value.fullPrompt")
+            .setConfigurationValue("messages", [
+              {
+                "role": "user",
+                "content": "{{% value }} [MASK]"
+              }
+            ])
+            .asAgentConfiguration()
+        ]
+      }
+    ];
+  }
+  public get secrets() {
+    return [
       {
         name: "hugging-face",
         id: "hugging-face",
@@ -60,7 +77,5 @@ export default class HuggingfaceCompletionExampleApplication extends StreamingAp
       },
       new KafkaSecret()
     ];
-
-    super("Hugging face completions", module, instance, configuration, secrets);
   }
 }

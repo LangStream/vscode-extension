@@ -15,34 +15,28 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import { Application } from './application';
+import { ApplicationLifecycleStatus } from './application-lifecycle-status';
 // May contain unused imports in some cases
 // @ts-ignore
-import { ApplicationStatus } from './application-status';
+import { ExecutorDescription } from './executor-description';
 
 /**
  * 
  * @export
- * @interface StoredApplication
+ * @interface AgentStatusDescription
  */
-export interface StoredApplication {
+export interface AgentStatusDescription {
     /**
      * 
-     * @type {string}
-     * @memberof StoredApplication
+     * @type {ApplicationLifecycleStatus}
+     * @memberof AgentStatusDescription
      */
-    'applicationId'?: string;
+    'status'?: ApplicationLifecycleStatus;
     /**
      * 
-     * @type {Application}
-     * @memberof StoredApplication
+     * @type {Array<ExecutorDescription>}
+     * @memberof AgentStatusDescription
      */
-    'instance'?: Application;
-    /**
-     * 
-     * @type {ApplicationStatus}
-     * @memberof StoredApplication
-     */
-    'status'?: ApplicationStatus;
+    'executors'?: Array<ExecutorDescription>;
 }
 

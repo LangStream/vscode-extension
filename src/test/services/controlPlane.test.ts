@@ -1,13 +1,13 @@
 import {expect} from "chai";
 import ControlPlaneService from "../../services/controlPlane";
-import {zipFiles} from "../../utils/zip";
 
 describe("Control plane client tests", () => {
   const webServiceUrl = "http://localhost:8090";
   const token = "";
+  const tenantName = "default";
+  const applicationId = "application-1";
 
   before(() => {
-
   });
 
   it("should list tenants", async () => {
@@ -24,7 +24,6 @@ describe("Control plane client tests", () => {
   });
 
   it("should get tenant config", async () => {
-    const tenantName = "default";
     const controlPlaneService = new ControlPlaneService(webServiceUrl, token);
     const tenantConfig = await controlPlaneService.getTenant(tenantName);
     expect(tenantConfig).to.be.an("object");
@@ -38,7 +37,6 @@ describe("Control plane client tests", () => {
   });
 
   it("should list applications", async () => {
-    const tenantName = "test-tenant1";
     const controlPlaneService = new ControlPlaneService(webServiceUrl, token);
 
     try{await controlPlaneService.addTenant(tenantName);}catch{}
@@ -48,8 +46,6 @@ describe("Control plane client tests", () => {
   });
 
   it("should error getting application details", async () => {
-    const tenantName = "test-tenant1";
-    const applicationId = "application-1";
     const controlPlaneService = new ControlPlaneService(webServiceUrl, token);
 
     try{
@@ -60,27 +56,7 @@ describe("Control plane client tests", () => {
     }
   });
 
-  it("should deploy application", async () => {
-    // const tenantName = "test-tenant1";
-    // const applicationId = "application-1";
-    // const zipFilePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\services\\test.zip";
-    // const modulePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\pipeline.yaml";
-    // const configurationPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\configuration.yaml";
-    // const instancePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\instance.yaml";
-    // const secretsPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\secrets.yaml";
-    //
-    // await zipFiles(zipFilePath, modulePath, instancePath, configurationPath ?? "", secretsPath ?? "");
-    //
-    // const controlPlaneService = new ControlPlaneService(webServiceUrl, token);
-    //
-    // try{await controlPlaneService.addTenant(tenantName);}catch{}
-    //
-    // await controlPlaneService.deployApplication(tenantName, applicationId, zipFilePath);
-  });
-
   it("should delete application", async () => {
-    const tenantName = "test-tenant1";
-    const applicationId = "application-1";
     const controlPlaneService = new ControlPlaneService(webServiceUrl, token);
     await controlPlaneService.deleteApplication(tenantName, applicationId);
   });

@@ -1,0 +1,32 @@
+name: Text Processing
+topics:
+  - name: input-topic
+    creation-mode: create-if-not-exists
+  - name: output-topic
+    creation-mode: create-if-not-exists
+pipeline:
+  - name: Convert to structured data
+    type: document-to-json
+    input: input-topic
+    configuration:
+      text-field: text
+      copy-properties: true
+  - name: Normalize text
+    type: text-normaliser
+    configuration:
+      make-lowercase: true
+      trim-spaces: true
+  - name: Split into chunks
+    type: text-splitter
+    output: output-topic
+    configuration:
+      splitter_type: RecursiveCharacterTextSplitter
+      chunk_size: 10
+      separators:
+        - "\n\n"
+        - "\n"
+        - " "
+        - ""
+      keep_separator: false
+      chunk_overlap: 5
+      length_function: cl100k_base

@@ -17,32 +17,32 @@
 /**
  * 
  * @export
- * @interface Dependency
+ * @interface Metrics
  */
-export interface Dependency {
+export interface Metrics {
     /**
      * 
-     * @type {string}
-     * @memberof Dependency
+     * @type {number}
+     * @memberof Metrics
      */
-    'name'?: string;
+    'total-in'?: number;
     /**
      * 
-     * @type {string}
-     * @memberof Dependency
+     * @type {number}
+     * @memberof Metrics
      */
-    'url'?: string;
+    'total-out'?: number;
     /**
      * 
-     * @type {string}
-     * @memberof Dependency
+     * @type {number}
+     * @memberof Metrics
      */
-    'type'?: string;
+    'started-at'?: number;
     /**
      * 
-     * @type {string}
-     * @memberof Dependency
+     * @type {number}
+     * @memberof Metrics
      */
-    'sha512sum'?: string;
+    'last-processed-at'?: number;
 }
 

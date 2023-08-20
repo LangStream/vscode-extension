@@ -1,16 +1,16 @@
 import * as fs from "fs";
+import {PathLike} from "fs";
 import * as fflate from "fflate";
 import Logger from "../common/logger";
-import {PathLike} from "fs";
+import {TArtifactItem} from "../types/tArtifactItem";
 
-export async function zipFiles(zipDestinationPath: PathLike, ...fileInfo: [zipPath: string, diskPath: PathLike][]): Promise<void> {
-  Logger.debug(`Zipping files to ${zipDestinationPath}`);
-
+export async function zipFiles(zipDestinationPath: PathLike, files: TArtifactItem[]): Promise<void> {
   return new Promise<void>((resolve, reject) => {
+    Logger.debug(`Zipping files to ${zipDestinationPath}`);
     const fileObj: fflate.Zippable = {};
 
     try{
-      fileInfo.forEach(([zipPath, diskPath]) => {
+      files.forEach(([zipPath, diskPath]) => {
         Logger.debug(`Adding ${diskPath} to zip at ${zipPath}`);
         fileObj[zipPath] = fs.readFileSync(diskPath);
       });

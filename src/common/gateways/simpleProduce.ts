@@ -1,9 +1,11 @@
-import {Gateway, GatewayTypeEnum} from "../../services/controlPlaneApi/gen/models/gateway";
-export default class SimpleProduceGateway implements Gateway {
-  constructor(private readonly topicName: string = "input-topic") {
+import {IGateway} from "../../interfaces/iGateway";
+import {GatewayTypeEnum} from "../../services/controlPlaneApi/gen/models";
+
+export default class SimpleProduceGateway implements IGateway {
+  constructor() {
   }
 
   id = "produce-gateway";
   type = GatewayTypeEnum.produce;
-  topic = this.topicName;
+  topic = "input-topic";
 }

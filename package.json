@@ -1,8 +1,8 @@
 {
   "name": "langstream",
   "displayName": "LangStream AI",
-  "description": "Develop generative AI streams with LangStream",
-  "version": "0.1.0-alpha",
+  "description": "Develop generative AI streams with LangStream v0.0.3",
+  "version": "0.1.0",
   "publisher": "DataStax",
   "engines": {
     "vscode": "^1.77.0"
@@ -59,10 +59,10 @@
     "axios": "^1.4.0",
     "bufferutil": "^4.0.7",
     "chai": "^4.3.7",
-    "crypto": "^1.0.1",
     "css-loader": "^6.7.3",
     "eslint": "^8.39.0",
     "fflate": "^0.8.0",
+    "form-data": "^4.0.0",
     "mocha": "^10.2.0",
     "sinon": "^15.1.0",
     "style-loader": "^3.3.2",
@@ -145,24 +145,24 @@
       }
     },
     "views": {
-      "aiStreamsView": [
+      "langStreamView": [
         {
-          "id": "extension.aiStreamsExplorer",
+          "id": "extension.langStreamExplorer",
           "name": "Control Planes"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "extension.aiStreamsExplorer",
-        "contents": "You have no saved contol planes.\n[Add a control plane](command:extension.vsAiStreamsAddControlPlane)."
+        "view": "extension.langStreamExplorer",
+        "contents": "You have no saved contol planes.\n[Add a control plane](command:extension.vsLangStreamAddControlPlane)."
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "icon": "images/AI-Logo.svg",
-          "id": "aiStreamsView",
+          "id": "langStreamView",
           "title": "AI Streams"
         }
       ]
@@ -170,121 +170,111 @@
     "menus": {
       "view/title": [
         {
-          "command": "extension.aiStreamsRefreshExplorer",
-          "when": "view == extension.aiStreamsExplorer",
+          "command": "extension.langStreamRefreshExplorer",
+          "when": "view == extension.langStreamExplorer",
           "group": "navigation"
         },
         {
-          "command": "extension.vsAiStreamsAddControlPlane",
-          "when": "view == extension.aiStreamsExplorer",
+          "command": "extension.vsLangStreamAddControlPlane",
+          "when": "view == extension.langStreamExplorer",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "extension.aiStreamsAddTenant",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.controlPlane/i",
+          "command": "extension.langStreamAddTenant",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.controlPlane/i",
           "group": "0@1"
         },
         {
-          "command": "extension.aiStreamsRemoveControlPlane",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.controlPlane/i",
+          "command": "extension.langStreamRemoveControlPlane",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.controlPlane/i",
           "group": "1@1"
         },
         {
-          "command": "extension.aiStreamsInitApplication",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.tenant/i",
+          "command": "extension.langStreamInitApplication",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.tenant/i",
           "group": "0@1"
         },
         {
-          "command": "extension.aiStreamsRemoveTenant",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.tenant/i",
+          "command": "extension.langStreamRemoveTenant",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.tenant/i",
           "group": "1@1"
         },
         {
-          "command": "extension.aiStreamsApplicationDetails",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
+          "command": "extension.langStreamApplicationDetails",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application\\.*/i",
           "group": "0@1"
         },
         {
-          "command": "extension.aiStreamsViewApplicationRuntime",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
-          "group": "0@2"
-        },
-        {
-          "command": "extension.aiStreamsOpenGatewayEditor",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application.*\\.gateway/i",
+          "command": "extension.langStreamOpenGatewayEditor",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application.*\\.gateway/i",
           "group": "0@3"
         },
         {
-          "command": "extension.aiStreamsOpenAppLogsEditor",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
+          "command": "extension.langStreamOpenAppLogsEditor",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application\\.*/i",
           "group": "0@4"
         },
         {
-          "command": "extension.aiStreamsRemoveApplication",
-          "when": "view == extension.aiStreamsExplorer && viewItem =~ /aiStreams\\.application\\.*/i",
+          "command": "extension.langStreamRemoveApplication",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application\\.*/i",
           "group": "1@1"
         }
       ]
     },
     "commands": [
       {
-        "command": "extension.aiStreamsRefreshExplorer",
+        "command": "extension.langStreamRefreshExplorer",
         "title": "Refresh control planes",
-        "category": "AiStreams",
+        "category": "LangStream",
         "icon": "$(refresh)"
       },
       {
-        "command": "extension.vsAiStreamsAddControlPlane",
+        "command": "extension.vsLangStreamAddControlPlane",
         "title": "Add control plane",
-        "category": "AiStreams",
+        "category": "LangStream",
         "icon": "$(plus)"
       },
       {
-        "command": "extension.aiStreamsRemoveControlPlane",
+        "command": "extension.langStreamRemoveControlPlane",
         "title": "Remove",
-        "category": "AiStreams"
+        "category": "LangStream"
       },
       {
-        "command": "extension.aiStreamsAddTenant",
+        "command": "extension.langStreamAddTenant",
         "title": "Add tenant",
-        "category": "AiStreams"
+        "category": "LangStream"
       },
       {
-        "command": "extension.aiStreamsInitApplication",
+        "command": "extension.langStreamInitApplication",
         "title": "New application",
-        "category": "AiStreams"
+        "category": "LangStream"
       },
       {
-        "command": "extension.aiStreamsRemoveTenant",
+        "command": "extension.langStreamRemoveTenant",
         "title": "Delete",
-        "category": "AiStreams"
+        "category": "LangStream"
       },
       {
-        "command": "extension.aiStreamsRemoveApplication",
+        "command": "extension.langStreamRemoveApplication",
         "title": "Delete",
-        "category": "AiStreams"
+        "category": "LangStream"
       },
       {
-        "command": "extension.aiStreamsApplicationDetails",
+        "command": "extension.langStreamApplicationDetails",
         "title": "Details",
-        "category": "AiStreams"
+        "category": "LangStream"
       },
       {
-        "command": "extension.aiStreamsViewApplicationRuntime",
-        "title": "Runtime info",
-        "category": "AiStreams"
-      },
-      {
-        "command": "extension.aiStreamsOpenGatewayEditor",
+        "command": "extension.langStreamOpenGatewayEditor",
         "title": "Messaging",
-        "category": "AiStreams"
+        "category": "LangStream"
       },
       {
-        "command": "extension.aiStreamsOpenAppLogsEditor",
+        "command": "extension.langStreamOpenAppLogsEditor",
         "title": "Logs",
-        "category": "AiStreams"
+        "category": "LangStream"
       }
     ]
   }

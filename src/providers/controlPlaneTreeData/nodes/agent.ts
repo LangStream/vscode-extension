@@ -2,56 +2,52 @@ import * as vscode from "vscode";
 import * as Constants from "../../../common/constants";
 import {TAllExplorerNodeTypes} from "../../../types/tAllExplorerNodeTypes";
 import MessageNode from "./message";
-import {
-  AgentLifecycleStatusStatusEnum,
-  AgentStatus,
-} from "../../../services/controlPlaneApi/gen";
-import {IApplicationNode} from "./application";
-import {TSavedControlPlane} from "../../../types/tSavedControlPlane";
+import * as lsModels from "../../../services/controlPlaneApi/gen/models";
+import {IErrorNode} from "./error";
+import {IPipelineNode} from "./pipeline";
 import * as path from "path";
 
 export interface IAgentNode extends vscode.TreeItem {
-  readonly agentStatus: AgentStatus;
-  readonly controlPlane: TSavedControlPlane;
-  readonly tenantName: string;
-  readonly applicationId: string;
+  readonly agent: lsModels.AgentConfiguration;
 }
 
 export class AgentNode extends vscode.TreeItem implements IAgentNode {
-  constructor(readonly label:string, readonly agentStatus: AgentStatus, readonly controlPlane: TSavedControlPlane, readonly tenantName: string, readonly applicationId: string) {
-    super(label, vscode.TreeItemCollapsibleState.Collapsed);
-    const status = agentStatus.status?.status ?? "unknown";
+  constructor(readonly agent: lsModels.AgentConfiguration) {
+    super(agent.name ?? "unknown", vscode.TreeItemCollapsibleState.None);
+    this.description = `Agent`;
+    this.contextValue = Constants.CONTEXT_VALUES.agent;
 
-    this.contextValue = `${Constants.CONTEXT_VALUES.agent}.${status}`;
-    this.description = `Agent ${status.toLowerCase()}`;
-    this.tooltip = agentStatus.status?.reason ?? "";
-
-    switch (agentStatus.status?.status) {
-      case AgentLifecycleStatusStatusEnum.deployed:
-        this.iconPath = new vscode.ThemeIcon("circle-filled", new vscode.ThemeColor(`debugIcon.startForeground`));
+    switch(agent.errors?.retries ?? 0) {
+      case 0:
+        this.iconPath = {
+          light: path.join(__dirname, "..", "images", "light", "agent-green.png"),
+          dark: path.join(__dirname, "..", "images", "dark", "agent-green.png")
+        };
         break;
-      case AgentLifecycleStatusStatusEnum.error:
-        this.iconPath = new vscode.ThemeIcon("circle-filled", new vscode.ThemeColor(`debugIcon.stopForeground`));
-        break;
-      case AgentLifecycleStatusStatusEnum.created:
-      case AgentLifecycleStatusStatusEnum.deploying:
       default:
-        this.iconPath = new vscode.ThemeIcon("circle-filled", new vscode.ThemeColor(`debugIcon.pauseForeground`));
+        this.iconPath = {
+          light: path.join(__dirname, "..", "images", "light", "agent-yellow.png"),
+          dark: path.join(__dirname, "..", "images", "dark", "agent-yellow.png")
+        };
         break;
     }
   }
 }
 
 export default class AgentTree {
-  public async getChildren(applicationNode: IApplicationNode): Promise<TAllExplorerNodeTypes[]> {
-    if(!applicationNode) { return []; }
+  public async getChildren(pipelineNode: IPipelineNode): Promise<TAllExplorerNodeTypes[]> {
+    if(!pipelineNode) { return []; }
 
-    const agentKeys = Object.keys(applicationNode.applicationStatus.agents || {});
-
-    if(agentKeys.length === 0 || applicationNode.applicationStatus.agents === undefined) {
+    if((pipelineNode.pipeline?.agents ?? 0) === 0) {
       return [new MessageNode(Constants.ExplorerMessageTypes.noAgents)];
     }
 
-    return agentKeys.map(agentKey => { return new AgentNode(agentKey, applicationNode.applicationStatus.agents![agentKey], applicationNode.controlPlane, applicationNode.tenantName, <string>applicationNode.storedApplication.applicationId);});
+    const agentNodes: (IAgentNode|IErrorNode)[] = [];
+
+    for(const agent of pipelineNode.pipeline.agents!) {
+      agentNodes.push(new AgentNode(agent));
+    }
+
+    return agentNodes;
   }
 }

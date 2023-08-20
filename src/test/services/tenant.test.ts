@@ -2,7 +2,7 @@ import {TSavedControlPlane} from "../../types/tSavedControlPlane";
 import TenantService from "../../services/tenant";
 import {expect} from "chai";
 
-describe("Application service tests", () => {
+describe("Tenant service tests", () => {
   let tenantService: TenantService;
   const savedControlPane: TSavedControlPlane = {
     name: "test",

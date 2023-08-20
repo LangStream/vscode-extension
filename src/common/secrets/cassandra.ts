@@ -1,4 +1,6 @@
-export default class CassandraSecret {
+import {ISecret} from "../../interfaces/iSecret";
+
+export default class CassandraSecret implements ISecret {
   constructor(secureConnectBundle = "", username = "", password = "") {
     this.data["secure-connect-bundle"] = secureConnectBundle;
     this.data["username"] = username;

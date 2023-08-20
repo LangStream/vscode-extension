@@ -1,40 +1,59 @@
-import StreamingApplication from "../streamingApplication";
 import KafkaKubernetesInstance from "../instances/kafkaKubernetes";
 import KafkaSecret from "../secrets/kafka";
 import SimpleConsumeGateway from "../gateways/simpleConsume";
 import {CustomPythonAgent, CustomPythonType} from "../agents/customPython";
+import {IExampleApplication} from "../../interfaces/iExampleApplication";
 
-export default class PythonSourceScaffoldExampleApplication extends StreamingApplication {
-  public constructor(baseSnippetsDir: string) {
-    const module = {
-      name: "Custom Python Source",
-      topics: [
-        {
-          "name": "output-topic",
-          "creation-mode": "create-if-not-exists"
-        }
-      ],
-      pipeline: [
-        new CustomPythonAgent(CustomPythonType.pythonSource, baseSnippetsDir)
-          .setInput(null)
-          .setOutput("output-topic")
-          .setConfigurationValue("className", "example.ExampleSource")
-          .setConfigurationValue("endpoint", "https://example.com")
-          .asAgentConfiguration(),
-      ]
-    };
-    const instance = new KafkaKubernetesInstance();
-    const configuration = {
+export default class PythonSourceScaffoldExampleApplication implements IExampleApplication {
+  constructor(private readonly snippetsDirPath: string) {}
+  public get exampleApplicationName(){
+    return "Python source scaffolding";
+  }
+  public get configuration() {
+    return {
       resources: [],
       dependencies: []
     };
-    const secrets = [
-      new KafkaSecret()
-    ];
-    const gateways = [
+  }
+  public get gateways() {
+    return [
       new SimpleConsumeGateway()
     ];
-    const python = `
+  }
+  public get instance() {
+    return  new KafkaKubernetesInstance();
+  }
+  public get modules() {
+    return [
+      {
+      name: "Custom Python Source",
+      topics: [
+      {
+        "name": "output-topic",
+        "creation-mode": "create-if-not-exists"
+      }
+    ],
+      pipelines: [
+      new CustomPythonAgent(CustomPythonType.pythonSource, this.snippetsDirPath)
+        .setInput(null)
+        .setOutput("output-topic")
+        .setConfigurationValue("className", "example.ExampleSource")
+        .setConfigurationValue("endpoint", "https://example.com")
+        .asAgentConfiguration(),
+    ]
+  }
+    ];
+  }
+  public get secrets() {
+    return [
+      new KafkaSecret()
+    ];
+  }
+  public get artifactFiles() {
+    return [
+      {
+        artifactFilePath: 'python/example.py',
+        srcCode: `
 import time
 from typing import List
 from sga_runtime.api import Source, Record
@@ -62,8 +81,8 @@ class ExampleSource(Source):
     # finalize the read
     def commit(self, records: List[Record]):
         pass
-`;
-
-    super("Python source scaffolding", module, instance, configuration, secrets, gateways, python);
-  }
+`
+      }
+    ];
+  };
 }

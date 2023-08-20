@@ -1,9 +1,10 @@
 import {expect} from "chai";
 import {snippetToYaml} from "../../../utils/snippetsToYaml";
 import AgentSnippet from "../../../common/agents/agentSnippet";
+import * as path from "path";
 
 describe("Agent snippet tests", () => {
-  let snippetsFolderPath = "c:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\snippets\\ai-actions-yaml.json";
+  let snippetsFolderPath = path.join(__dirname, "..", "..","..","..", "snippets", "ai-actions-yaml.json");
   let agentSnippet: AgentSnippet;
 
   beforeEach(() => {

@@ -17,24 +17,24 @@ export default class GatewayMessageDocumentContent{
     }
 
     const applicationService = new ApplicationService(savedControlPlane);
-    const storedApplication = await applicationService.get(tenantName, applicationId);
+    const applicationDescription = await applicationService.get(tenantName, applicationId);
 
-    if(!storedApplication) {
+    if(!applicationDescription) {
       throw new Error(`Could not find application config for ${tenantName}/${applicationId}`);
     }
 
-    if(storedApplication.instance?.gateways?.gateways === undefined) {
+    if(applicationDescription.application?.gateways?.gateways === undefined) {
       throw new Error(`Could not find gateways config for ${tenantName}/${applicationId}`);
     }
 
-    if(storedApplication?.instance?.modules === undefined) {
+    if(applicationDescription.application?.modules === undefined) {
       throw new Error(`Could not find modules config for ${tenantName}/${applicationId}`);
     }
 
     const gatewayWebSockets: {gateway:Gateway, webSocketUrl:URL}[] = [];
     let agents:AgentConfiguration[] = [];
 
-    storedApplication?.instance?.gateways.gateways.forEach((gateway) => {
+    applicationDescription.application.gateways.gateways.forEach((gateway) => {
       const webSocketUrl = new URL(savedControlPlane.apiGatewayUrl);
       webSocketUrl.pathname += path.join("v1", gateway.type!, tenantName, applicationId, gateway.id!);
 
@@ -44,14 +44,12 @@ export default class GatewayMessageDocumentContent{
       });
     });
 
-    for(const moduleKey of Object.keys(storedApplication?.instance?.modules)){
-      const module = storedApplication?.instance?.modules[moduleKey];
+    for(const module of applicationDescription.application.modules){
       if(module?.pipelines === undefined) {
         continue;
       }
 
-      for(const pipelineKey of Object.keys(module?.pipelines)){
-        const pipeline = module?.pipelines[pipelineKey];
+      for(const pipeline of module?.pipelines){
         if(pipeline?.agents === undefined) {
           continue;
         }

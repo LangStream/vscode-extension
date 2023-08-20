@@ -1,31 +1,31 @@
 import {ProgressReport, TObservableTask} from "../types/tObservableTask";
-import {ApplicationLifecycleStatusStatusEnum, StoredApplication} from "./controlPlaneApi/gen";
+import {ApplicationLifecycleStatusStatusEnum, ApplicationDescription} from "./controlPlaneApi/gen";
 import ApplicationService from "./application";
 import * as vscode from "vscode";
 import * as Constants from "../common/constants";
 
-export default class WatchApplicationDeployTask implements TObservableTask<StoredApplication> {
+export default class WatchApplicationDeployTask implements TObservableTask<ApplicationDescription> {
   constructor(private readonly controlPanelName: string,
               private readonly tenantName: string,
               private readonly applicationId: string,
               private readonly applicationService: ApplicationService,
-              private readonly progressCallBack: () => void) {
+              private readonly progressCallBack: () => Promise<void>) {
   }
 
-  errorThreshold = 5; //this because the application can be in a state of errorDeploying for a while
+  errorThreshold = 20;
 
   pollingInterval = 1200;
-  timeout = 200000;
+  timeout = 300000;
 
-  action(): Promise<StoredApplication | undefined> {
+  action(): Promise<ApplicationDescription | undefined> {
     return this.applicationService.get(this.tenantName, this.applicationId);
   }
 
-  complete(hasErrors: boolean, actionResult: StoredApplication | undefined): boolean {
+  complete(hasErrors: boolean, actionResult: ApplicationDescription | undefined): boolean {
     return hasErrors || (actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.deployed);
   }
 
-  hasErrors(actionResult: StoredApplication | undefined): boolean {
+  hasErrors(actionResult: ApplicationDescription | undefined): boolean {
     //console.log("hasErrors", actionResult);
     return actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.errorDeploying;
   }
@@ -49,10 +49,11 @@ export default class WatchApplicationDeployTask implements TObservableTask<Store
     vscode.window.showInformationMessage(`Application deployed ${this.viewLogsMarkdown.value}`);
   }
 
-  onProgress(actionResult: StoredApplication | undefined): ProgressReport {
-    //console.log("onProgress", actionResult);
+  onProgress(actionResult: ApplicationDescription | undefined): ProgressReport {
+    console.log("onProgress", actionResult);
     const increment = (100/(this.timeout/this.pollingInterval));
-    this.progressCallBack();
+
+    this.progressCallBack(); // fire and forget, don't let it block the progress
 
     if (actionResult === undefined) {
       return {message: "Waiting to deploy", increment: increment};

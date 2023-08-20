@@ -4,7 +4,7 @@ import {window} from "vscode";
 import TenantService from "./tenant";
 
 export default class WatchTenantAddingTask implements TObservableTask<TenantConfiguration> {
-  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly progressCallBack: () => void) {
+  constructor(private readonly tenantName: string, private readonly tenantService: TenantService, private readonly progressCallBack: () => Promise<void>) {
   }
 
   action = () => {

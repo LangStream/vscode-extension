@@ -1,9 +1,10 @@
 import {snippetToYaml} from "../../utils/snippetsToYaml";
 import {expect} from "chai";
 import * as yaml from "yaml";
+import * as path from "path";
 
 describe("Snippet to yaml tests", () => {
-  let snippetsFolderPath = "c:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\snippets\\input-output-yaml.json";
+  let snippetsFolderPath = path.join(__dirname, "..", "..", "..", "snippets", "input-output-yaml.json");
 
   it("should convert snippet to yaml", async () => {
     const snippetYamlDocument = snippetToYaml(snippetsFolderPath, "s3-source");

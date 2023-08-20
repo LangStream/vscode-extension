@@ -18,9 +18,7 @@ export default class ProgressRunner<T> {
         return this.startRunner(progress, token, observableTask);
       });
 
-    a.then(() => {
-      Logger.debug('ProgressRunner finished');
-    });
+    await a; //block until the progress is complete
   }
 
   private async startRunner(progress: Progress<ProgressReport>, token: CancellationToken, observableTask: TObservableTask<T>): Promise<void> {

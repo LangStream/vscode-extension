@@ -15,28 +15,34 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import { AgentStatus } from './agent-status';
+import { Pipeline } from './pipeline';
 // May contain unused imports in some cases
 // @ts-ignore
-import { ApplicationLifecycleStatus } from './application-lifecycle-status';
+import { TopicDefinition } from './topic-definition';
 
 /**
  * 
  * @export
- * @interface ApplicationStatus
+ * @interface ModuleDefinition
  */
-export interface ApplicationStatus {
+export interface ModuleDefinition {
     /**
      * 
-     * @type {ApplicationLifecycleStatus}
-     * @memberof ApplicationStatus
+     * @type {string}
+     * @memberof ModuleDefinition
      */
-    'status'?: ApplicationLifecycleStatus;
+    'id'?: string;
     /**
      * 
-     * @type {{ [key: string]: AgentStatus; }}
-     * @memberof ApplicationStatus
+     * @type {Array<Pipeline>}
+     * @memberof ModuleDefinition
      */
-    'agents'?: { [key: string]: AgentStatus; };
+    'pipelines'?: Array<Pipeline>;
+    /**
+     * 
+     * @type {Array<TopicDefinition>}
+     * @memberof ModuleDefinition
+     */
+    'topics'?: Array<TopicDefinition>;
 }
 

@@ -22,9 +22,7 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from '../base';
 // @ts-ignore
-import { ApplicationRuntimeInfo } from '../models';
-// @ts-ignore
-import { StoredApplication } from '../models';
+import { ApplicationDescription } from '../models';
 /**
  * ApplicationsApi - axios parameter creator
  * @export
@@ -152,44 +150,6 @@ export const ApplicationsApiAxiosParamCreator = function (configuration?: Config
         },
         /**
          *
-         * @summary Get an application by name
-         * @param {string} tenant
-         * @param {string} name
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getApplicationRuntimeInfo: async (tenant: string, name: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'tenant' is not null or undefined
-            assertParamExists('getApplicationRuntimeInfo', 'tenant', tenant)
-            // verify required parameter 'name' is not null or undefined
-            assertParamExists('getApplicationRuntimeInfo', 'name', name)
-            const localVarPath = `/api/applications/{tenant}/{name}/info`
-                .replace(`{${"tenant"}}`, encodeURIComponent(String(tenant)))
-                .replace(`{${"name"}}`, encodeURIComponent(String(name)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         *
          * @summary Get all applications
          * @param {string} tenant
          * @param {*} [options] Override http request option.
@@ -244,7 +204,7 @@ export const ApplicationsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteApplication(tenant, name, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
-         /**
+        /**
          *
          * @summary Get an application by name
          * @param {string} tenant
@@ -252,7 +212,7 @@ export const ApplicationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getApplication(tenant: string, name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StoredApplication>> {
+        async getApplication(tenant: string, name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApplicationDescription>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getApplication(tenant, name, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -271,24 +231,12 @@ export const ApplicationsApiFp = function(configuration?: Configuration) {
         },
         /**
          *
-         * @summary Get an application by name
-         * @param {string} tenant
-         * @param {string} name
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getApplicationRuntimeInfo(tenant: string, name: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApplicationRuntimeInfo>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getApplicationRuntimeInfo(tenant, name, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
-        },
-        /**
-         *
          * @summary Get all applications
          * @param {string} tenant
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getApplications(tenant: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<StoredApplication>>> {
+        async getApplications(tenant: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ApplicationDescription>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getApplications(tenant, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -321,7 +269,7 @@ export const ApplicationsApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getApplication(tenant: string, name: string, options?: any): AxiosPromise<StoredApplication> {
+        getApplication(tenant: string, name: string, options?: any): AxiosPromise<ApplicationDescription> {
             return localVarFp.getApplication(tenant, name, options).then((request) => request(axios, basePath));
         },
         /**
@@ -338,23 +286,12 @@ export const ApplicationsApiFactory = function (configuration?: Configuration, b
         },
         /**
          *
-         * @summary Get an application by name
-         * @param {string} tenant
-         * @param {string} name
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getApplicationRuntimeInfo(tenant: string, name: string, options?: any): AxiosPromise<ApplicationRuntimeInfo> {
-            return localVarFp.getApplicationRuntimeInfo(tenant, name, options).then((request) => request(axios, basePath));
-        },
-        /**
-         *
          * @summary Get all applications
          * @param {string} tenant
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getApplications(tenant: string, options?: any): AxiosPromise<Array<StoredApplication>> {
+        getApplications(tenant: string, options?: any): AxiosPromise<Array<ApplicationDescription>> {
             return localVarFp.getApplications(tenant, options).then((request) => request(axios, basePath));
         },
     };
@@ -405,19 +342,6 @@ export class ApplicationsApi extends BaseAPI {
      */
     public getApplicationLogs(tenant: string, name: string, filter?: Array<string>, options?: AxiosRequestConfig) {
         return ApplicationsApiFp(this.configuration).getApplicationLogs(tenant, name, filter, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     *
-     * @summary Get an application by name
-     * @param {string} tenant
-     * @param {string} name
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ApplicationsApi
-     */
-    public getApplicationRuntimeInfo(tenant: string, name: string, options?: AxiosRequestConfig) {
-        return ApplicationsApiFp(this.configuration).getApplicationRuntimeInfo(tenant, name, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

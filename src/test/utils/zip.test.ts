@@ -2,20 +2,21 @@ import {expect} from "chai";
 import {zipFiles} from "../../utils/zip";
 import * as fflate from "fflate";
 import * as fs from "fs";
+import * as path from "path";
 
 describe("Zip util tests", () => {
   it("should zip up files", async () => {
-    const zipFilePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\utils\\test.zip";
-    const modulePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\pipeline.yaml";
-    const configurationPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\application\\configuration.yaml";
-    const instancePath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\instance.yaml";
-    const secretsPath = "C:\\Users\\ddieruf\\source\\LangStream\\vscode-extension\\src\\test\\assets\\test-app\\secrets.yaml";
+    const zipFilePath = path.join(__dirname, "test.zip");
+    const modulePath = path.join(__dirname, "..", "assets","test-app","application","pipeline.yaml");
+    const configurationPath = path.join(__dirname, "..", "assets","test-app","application","configuration.yaml");
+    const instancePath = path.join(__dirname, "..", "assets","test-app","instance.yaml");
+    const secretsPath = path.join(__dirname, "..", "assets","test-app","secrets.yaml");
 
     const files:[zipPath: string, diskPath: fs.PathLike][] = [["application/pipeline.yaml", modulePath], ["instance.yaml", instancePath]];
     if(configurationPath){files.push(["application/configuration.yaml", configurationPath]);}
     if(secretsPath){files.push(["secrets.yaml", secretsPath]);}
 
-    await zipFiles(zipFilePath, ...files);
+    await zipFiles(zipFilePath, files);
 
     const fileBuffer = fs.readFileSync(zipFilePath);
     expect(fileBuffer.length).to.be.greaterThan(0);

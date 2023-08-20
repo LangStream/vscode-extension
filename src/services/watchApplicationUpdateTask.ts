@@ -1,15 +1,16 @@
 import {ProgressReport, TObservableTask} from "../types/tObservableTask";
-import {ApplicationLifecycleStatusStatusEnum, StoredApplication} from "./controlPlaneApi/gen";
+import {ApplicationLifecycleStatusStatusEnum, ApplicationDescription} from "./controlPlaneApi/gen";
 import ApplicationService from "./application";
 import * as vscode from "vscode";
 import * as Constants from "../common/constants";
 
-export default class WatchApplicationUpdateTask implements TObservableTask<StoredApplication> {
+export default class WatchApplicationUpdateTask implements TObservableTask<ApplicationDescription> {
+  private beganDeploying = false;
   constructor(private readonly controlPanelName: string,
               private readonly tenantName: string,
               private readonly applicationId: string,
               private readonly applicationService: ApplicationService,
-              private readonly progressCallBack: () => void) {
+              private readonly progressCallBack: () => Promise<void>) {
   }
 
   errorThreshold = 5; //this because the application can be in a state of errorDeploying for a while
@@ -17,15 +18,20 @@ export default class WatchApplicationUpdateTask implements TObservableTask<Store
   pollingInterval = 1200;
   timeout = 200000;
 
-  action(): Promise<StoredApplication | undefined> {
+  action(): Promise<ApplicationDescription | undefined> {
     return this.applicationService.get(this.tenantName, this.applicationId);
   }
 
-  complete(hasErrors: boolean, actionResult: StoredApplication | undefined): boolean {
-    return hasErrors || (actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.deployed);
+  complete(hasErrors: boolean, actionResult: ApplicationDescription | undefined): boolean {
+    // Wait till update has begun deploying before looking for deployed
+    if(actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.deploying){
+      this.beganDeploying = true;
+    }
+
+    return this.beganDeploying && (hasErrors || (actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.deployed));
   }
 
-  hasErrors(actionResult: StoredApplication | undefined): boolean {
+  hasErrors(actionResult: ApplicationDescription | undefined): boolean {
     return actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.errorDeploying;
   }
 
@@ -48,8 +54,8 @@ export default class WatchApplicationUpdateTask implements TObservableTask<Store
     vscode.window.showInformationMessage(`Application updated ${this.viewLogsMarkdown.value}`);
   }
 
-  onProgress(actionResult: StoredApplication | undefined): ProgressReport {
-    //console.log("onProgress", actionResult);
+  onProgress(actionResult: ApplicationDescription | undefined): ProgressReport {
+    console.log("onProgress", actionResult);
     const increment = (100/(this.timeout/this.pollingInterval));
     this.progressCallBack();
 

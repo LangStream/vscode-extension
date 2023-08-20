@@ -1,6 +1,7 @@
-import {Configuration} from "../../services/controlPlaneApi/gen";
+import {IInstance} from "../../interfaces/iInstance";
 
-export default class KafkaKubernetesInstance extends Configuration {
+
+export default class KafkaKubernetesInstance implements IInstance {
   streamingCluster = {
     type: "kafka",
     configuration: {
@@ -16,5 +17,5 @@ export default class KafkaKubernetesInstance extends Configuration {
 
   computeCluster = {
     type: "kubernetes",
-  }
+  };
 }

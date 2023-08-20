@@ -1,4 +1,6 @@
 // TELEMETRY
+import {nodeModules} from "ts-loader/dist/constants";
+
 export const TELEM_KEY: string = 'xxxxxx';
 
 // CONFIG
@@ -11,45 +13,51 @@ export const LANGUAGE_NAME: string = 'langstream';
 export const LANGUAGE_SCHEME: string = 'vs-langstream';
 
 // COMMANDS
-export const COMMAND_REFRESH_EXPLORER = 'extension.aiStreamsRefreshExplorer';
-export const COMMAND_ADD_CONTROL_PLANE = 'extension.vsAiStreamsAddControlPlane';
-export const COMMAND_REMOVE_CONTROL_PLANE = 'extension.aiStreamsRemoveControlPlane';
-export const COMMAND_REMOVE_TENANT = 'extension.aiStreamsRemoveTenant';
-export const COMMAND_ADD_TENANT = 'extension.aiStreamsAddTenant';
-export const COMMAND_REMOVE_APPLICATION = 'extension.aiStreamsRemoveApplication';
-export const COMMAND_INIT_APPLICATION = 'extension.aiStreamsInitApplication';
-export const COMMAND_DEPLOY_APPLICATION = 'extension.aiStreamsDeployApplication';
-export const COMMAND_UPDATE_APPLICATION = 'extension.aiStreamsUpdateApplication';
-export const COMMAND_VIEW_APPLICATION_DETAILS = 'extension.aiStreamsApplicationDetails';
-export const COMMAND_VIEW_WORKER_LOGS = 'extension.aiStreamsWorkerLogs';
-export const COMMAND_VIEW_APPLICATION_RUNTIME = 'extension.aiStreamsViewApplicationRuntime';
-export const COMMAND_OPEN_GATEWAY_EDITOR = 'extension.aiStreamsOpenGatewayEditor';
-export const COMMAND_OPEN_APP_LOGS_EDITOR = 'extension.aiStreamsOpenAppLogsEditor';
-export const COMMAND_OPEN_APP_LOGS_FROM_DEPLOY = "extension.aiStreamsOpenAppLogsEditorFromDeploy";
-export const COMMAND_VIEW_OUTPUT_WINDOW = "extension.aiStreamsViewOutputWindow";
+export const COMMAND_REFRESH_EXPLORER = 'extension.langStreamRefreshExplorer';
+export const COMMAND_ADD_CONTROL_PLANE = 'extension.vsLangStreamAddControlPlane';
+export const COMMAND_REMOVE_CONTROL_PLANE = 'extension.langStreamRemoveControlPlane';
+export const COMMAND_REMOVE_TENANT = 'extension.langStreamRemoveTenant';
+export const COMMAND_ADD_TENANT = 'extension.langStreamAddTenant';
+export const COMMAND_REMOVE_APPLICATION = 'extension.langStreamRemoveApplication';
+export const COMMAND_INIT_APPLICATION = 'extension.langStreamInitApplication';
+export const COMMAND_DEPLOY_APPLICATION = 'extension.langStreamDeployApplication';
+export const COMMAND_UPDATE_APPLICATION = 'extension.langStreamUpdateApplication';
+export const COMMAND_VIEW_APPLICATION_DETAILS = 'extension.langStreamApplicationDetails';
+export const COMMAND_OPEN_GATEWAY_EDITOR = 'extension.langStreamOpenGatewayEditor';
+export const COMMAND_OPEN_APP_LOGS_EDITOR = 'extension.langStreamOpenAppLogsEditor';
+export const COMMAND_OPEN_APP_LOGS_FROM_DEPLOY = "extension.langStreamOpenAppLogsEditorFromDeploy";
+export const COMMAND_VIEW_OUTPUT_WINDOW = "extension.langStreamViewOutputWindow";
 
 // PROVIDERS
-export const CONTROL_PLANE_TREE = 'extension.aiStreamsExplorer';
+export const CONTROL_PLANE_TREE = 'extension.langStreamExplorer';
 export const GATEWAY_CUSTOM_EDITOR_VIEW_TYPE: string = 'extension.gatewayCustomEditor';
 export const APP_LOGS_CUSTOM_EDITOR_VIEW_TYPE: string = 'extension.appLogsCustomEditor';
 
 export const CONTEXT_VALUES = {
-  error: 'aiStreams.error',
-  message: 'aiStreams.message',
-  controlPlane: 'aiStreams.controlPlane',
-  folder: 'aiStreams.folder',
-  tenant: 'aiStreams.tenant',
-  application: 'aiStreams.application',
-  agent: 'aiStreams.agent',
-  worker: 'aiStreams.worker'
+  error: 'langStream.error',
+  message: 'langStream.message',
+  controlPlane: 'langStream.controlPlane',
+  folder: 'langStream.folder',
+  tenant: 'langStream.tenant',
+  application: 'langStream.application',
+  agent: 'langStream.agent',
+  worker: 'langStream.worker',
+  module: 'langStream.module',
+  gateway: 'langStream.gateway',
+  pipeline: 'langStream.pipeline',
 };
 
 export enum ExplorerMessageTypes {
   noTenants,
   noApplications,
   noAgents,
-  noWorkers
+  noWorkers,
+  noModules,
+  noGateways,
+  noPipelines,
 }
 
-export class ExplorerFolderTypes {
+export enum ExplorerFolderTypes {
+  moduleFolder,
+  gatewayFolder
 }

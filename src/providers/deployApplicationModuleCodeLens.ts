@@ -7,9 +7,10 @@ import {TSavedControlPlane} from "../types/tSavedControlPlane";
 import ConfigurationProvider from "./configuration";
 import TenantService from "../services/tenant";
 import ApplicationService from "../services/application";
-import {Dependency, StoredApplication} from "../services/controlPlaneApi/gen";
+import {ApplicationDescription} from "../services/controlPlaneApi/gen";
 import TDeployableApplication from "../types/tDeployableApplication";
 import * as yaml from "yaml";
+import {IDependency} from "../interfaces/iDependency";
 
 export default class DeployApplicationModuleCodeLens implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
@@ -20,6 +21,7 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       this._onDidChangeCodeLenses.fire();
     });
   }
+
   public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
     const documentText = document.getText();
     let regexScore = 0;
@@ -93,19 +95,18 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
     const discoveredApplication = await this.discoverApplication(savedControlPlanes, applicationName);
 
     const deployableApplication = new class implements TDeployableApplication {
-      id = discoveredApplication?.application?.applicationId ?? applicationName.toLowerCase().replace(/[^a-zA-Z0-9.-]/g, "-").substring(0, Constants.MAX_APPLICATION_NAME_LENGTH);
+      id = discoveredApplication?.applicationDescription["application-id"] ?? applicationName.toLowerCase().replace(/[^a-zA-Z0-9.-]/g, "-").substring(0, Constants.MAX_APPLICATION_NAME_LENGTH);
       name = applicationName;
       modulePath = modulePath;
       configurationPath = adjacentFiles.configurationPath;
       instancePath = adjacentFiles.instancePath;
       secretsPath = adjacentFiles.secretsPath;
       gatewaysPath = adjacentFiles.gatewaysPath;
-      pythonPath = adjacentFiles.pythonPath;
+      pythonPath = adjacentFiles.pythonDir;
       controlPlane = discoveredApplication?.controlPlane;
       tenantName = discoveredApplication?.tenantName;
-      storedApplication = discoveredApplication?.application;
-
-      findDependencies(): Dependency[] {
+      applicationDescription = discoveredApplication?.applicationDescription;
+      findDependencies(): IDependency[] {
         if(this.configurationPath === undefined){
           return [];
         }
@@ -132,7 +133,7 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       return cmd("", `Could not find instance.yaml in parent folder`);
     }
 
-    if(deployableApplication.storedApplication === undefined){
+    if(deployableApplication.applicationDescription === undefined){
       return cmd(Constants.COMMAND_DEPLOY_APPLICATION,
         "Deploy application",
         "Deploy the application to control plane",
@@ -145,12 +146,12 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       [deployableApplication]);
   }
 
-  private discoverAdjacentFiles(modulePath: string): {configurationPath?: string, instancePath?: string, secretsPath?: string, gatewaysPath?: string, pythonPath?: string} {
+  private discoverAdjacentFiles(modulePath: string): {configurationPath?: string, instancePath?: string, secretsPath?: string, gatewaysPath?: string, pythonDir?: string} {
     let configurationPath: string | undefined = undefined;
     let instancePath: string | undefined = undefined;
     let secretsPath: string | undefined = undefined;
     let gatewaysPath: string | undefined = undefined;
-    let pythonPath: string | undefined = undefined;
+    let pythonDir: string | undefined = undefined;
 
     // Discover adjacent application files
     const thisDir = path.parse(modulePath).dir;
@@ -173,7 +174,7 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
     const parentDir = path.parse(thisDir).dir;
     fs.readdirSync(parentDir, { withFileTypes: true }).forEach((value:fs.Dirent) => {
       if(value.isDirectory() && value.name.toLowerCase() === 'python'){
-        pythonPath = path.join(parentDir, value.name);
+        pythonDir = path.join(parentDir, value.name);
         return;
       }
 
@@ -192,11 +193,11 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
       instancePath,
       secretsPath,
       gatewaysPath,
-      pythonPath
+      pythonDir
     };
   }
 
-  private async discoverApplication(savedControlPlanes: TSavedControlPlane[], applicationName: string): Promise<{ controlPlane: TSavedControlPlane, tenantName: string, application: StoredApplication } | undefined> {
+  private async discoverApplication(savedControlPlanes: TSavedControlPlane[], applicationName: string): Promise<{ controlPlane: TSavedControlPlane, tenantName: string, applicationDescription: ApplicationDescription } | undefined> {
     for (const savedControlPlane of savedControlPlanes) {
       const tenantService = new TenantService(savedControlPlane);
       const tenants = await tenantService.listNames();
@@ -206,24 +207,22 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
         const applicationIds = await applicationService.listIds(tenant);
 
         for (const applicationId of applicationIds) {
-          const storedApplication = await applicationService.get(tenant, applicationId);
-          if (storedApplication === undefined || storedApplication.instance?.modules === undefined) {
+          const applicationDesc = await applicationService.get(tenant, applicationId);
+          if (applicationDesc === undefined || applicationDesc.application === undefined || applicationDesc.application.modules === undefined) {
             continue;
           }
 
-          for (const moduleKey of Object.keys(storedApplication.instance.modules)) {
-            const module = storedApplication.instance.modules[moduleKey];
+          for (const module of applicationDesc.application.modules) {
             if(module === undefined || module.pipelines === undefined){
               continue;
             }
 
-            for(const pipelineKey of Object.keys(module.pipelines)){
-              const pipeline = module.pipelines[pipelineKey];
+            for(const pipeline of module.pipelines){
               if(pipeline?.name?.toLowerCase() === applicationName.toLowerCase()){
                 return {
                   controlPlane: savedControlPlane,
                   tenantName: tenant,
-                  application: storedApplication
+                  applicationDescription: applicationDesc
                 };
               }
             }
