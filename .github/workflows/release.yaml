@@ -47,13 +47,13 @@ jobs:
           version: ${{ steps.package_version.outputs.current-version }}
           path: 'CHANGELOG.md'
 
-#      - name: Publish to Visual Studio Marketplace
-#        uses: HaaLeo/publish-vscode-extension@v1
-#        id: publishToVSMarketplace
-#        with:
-#          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
-#          registryUrl: https://marketplace.visualstudio.com
-#          dryRun: ${{ github.event.inputs.dry_run == 'true' }}
+      - name: Publish to Visual Studio Marketplace
+        uses: HaaLeo/publish-vscode-extension@v1
+        id: publishToVSMarketplace
+        with:
+          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+          registryUrl: https://marketplace.visualstudio.com
+          dryRun: ${{ github.event.inputs.dry_run == 'true' }}
 
       #      - name: Publish to Open VSX Registry
       #        uses: HaaLeo/publish-vscode-extension@v1
@@ -74,5 +74,5 @@ jobs:
           body: Publish ${{ steps.package_version.outputs.current-version }}
           draft: ${{ github.event.inputs.as_draft == 'true' }}
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DDIERUF_PAT }}
           files: ${{ steps.publishToOpenVSX.outputs.vsixPath}}
