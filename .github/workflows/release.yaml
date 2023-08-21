@@ -1,0 +1,78 @@
+name: Build & Publish
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        type: boolean
+        required: true
+        default: false
+        description: Dry run, will not push branches or upload the artifact to marketplace.
+      as_draft:
+        type: boolean
+        required: true
+        default: false
+        description: Mark the GitHub release as a draft.
+      prerelease:
+        type: boolean
+        required: true
+        default: false
+        description: Mark the GitHub release as a pre-release version.
+
+jobs:
+  build:
+    name: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Run install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get current package version
+        id: package_version
+        uses: martinbeentjes/npm-get-version-action@v1.1.0
+
+      - name: Check version is mentioned in Changelog
+        uses: mindsers/changelog-reader-action@v2.0.0
+        with:
+          version: ${{ steps.package_version.outputs.current-version }}
+          path: 'CHANGELOG.md'
+
+#      - name: Publish to Visual Studio Marketplace
+#        uses: HaaLeo/publish-vscode-extension@v1
+#        id: publishToVSMarketplace
+#        with:
+#          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+#          registryUrl: https://marketplace.visualstudio.com
+#          dryRun: ${{ github.event.inputs.dry_run == 'true' }}
+
+      #      - name: Publish to Open VSX Registry
+      #        uses: HaaLeo/publish-vscode-extension@v1
+      #        id: publishToOpenVSX
+      #        with:
+      #          pat: ${{ secrets.OPEN_VSX_TOKEN }}
+      #          dryRun: ${{ github.event.inputs.dry_run == 'true' }}
+      #          extensionFile: ${{ steps.publishToVSMarketplace.outputs.vsixPath }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+#        env:
+#          GITHUB_REPOSITORY: LangStream/vscode-extension
+        with:
+          tag_name: ${{ steps.package_version.outputs.current-version }}
+          name: ${{ steps.package_version.outputs.current-version }}
+          body: Publish ${{ steps.package_version.outputs.current-version }}
+          draft: ${{ github.event.inputs.as_draft == 'true' }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.publishToOpenVSX.outputs.vsixPath}}
