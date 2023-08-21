@@ -39,10 +39,10 @@ jobs:
 
       - name: Get current package version
         id: package_version
-        uses: martinbeentjes/npm-get-version-action@v1.1.0
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
       - name: Check version is mentioned in Changelog
-        uses: mindsers/changelog-reader-action@v2.0.0
+        uses: mindsers/changelog-reader-action@v2.2.2
         with:
           version: ${{ steps.package_version.outputs.current-version }}
           path: 'CHANGELOG.md'
