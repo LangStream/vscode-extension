@@ -7,8 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0]
 
+The initial release of the extension.
+
 ### Added
 
-- Asdf
+- Control plane
+  - Save and load control plane configurations
+  - List control plane tenants/applications
+  - API client
+- Tenant
+  - Create and delete tenants
+  - List tenant applications
+  - Initialize application manifests
+- Application
+  - List application components (modules/pipelines/agents)
+  - Delete application
+  - Get application details
+  - Watch application logs
+  - Message with gateways
+- Gateway
+  - List gateways
+- Pipeline
+  - Code lens shows a deploy and update button
+- Agent
+  - Snippet completion while building a pipeline
 
 Contributors: ddieruf
