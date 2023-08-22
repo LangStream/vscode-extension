@@ -13,9 +13,10 @@ export interface IAgentNode extends vscode.TreeItem {
 
 export class AgentNode extends vscode.TreeItem implements IAgentNode {
   constructor(readonly agent: lsModels.AgentConfiguration) {
-    super(agent.name ?? "unknown", vscode.TreeItemCollapsibleState.None);
+    super("unknown", vscode.TreeItemCollapsibleState.None);
     this.description = `Agent`;
     this.contextValue = Constants.CONTEXT_VALUES.agent;
+    this.label = this.decideLabel(agent);
 
     switch(agent.errors?.retries ?? 0) {
       case 0:
@@ -31,6 +32,34 @@ export class AgentNode extends vscode.TreeItem implements IAgentNode {
         };
         break;
     }
+  }
+
+  private decideLabel(agent: lsModels.AgentConfiguration): string {
+    const name: string | undefined | null = agent.name?.trim()
+      .replace(/'null'/g, "")
+      .replace(/"null"/g, "")
+      .replace(/^\bnull\b$/i, "")
+      .replace(/"/g, "")
+      .replace(/'/g, "")
+      .replace(/`/g, "");
+
+    const id: string | undefined | null = agent.id?.trim()
+      .replace(/'null'/g, "")
+      .replace(/"null"/g, "")
+      .replace(/^\bnull\b$/i, "")
+      .replace(/"/g, "")
+      .replace(/'/g, "")
+      .replace(/`/g, "");
+
+    if(name !== undefined && name !== null && name.length > 0){
+      return name;
+    }
+
+    if(id !== undefined && id !== null && id.length > 0){
+      return id;
+    }
+
+    return "unknown";
   }
 }
 
