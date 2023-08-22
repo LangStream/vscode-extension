@@ -1,3 +1,5 @@
+![](.\images\logo.png)
+
 # LangStream AI extension for VSCode
 
 The LangStream project combines the intelligence of large language models (LLMs) with the agility of streaming processing, to create powerful processing applications. An application in LangStream can watch a message topic and process data through multiple steps to output some useful generative AI results. Learn more about the LangStream project [here](https://langstream.ai/). Or get started with the LangStream documentation [here](https://docs.langstream.ai/).

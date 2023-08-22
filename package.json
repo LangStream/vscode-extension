@@ -1,8 +1,8 @@
 {
   "name": "langstream",
   "displayName": "LangStream AI",
-  "description": "Develop generative AI streams with LangStream v0.0.3",
-  "version": "0.1.0",
+  "description": "Develop streaming generative AI applications with LangStream",
+  "version": "0.2.0",
   "publisher": "DataStax",
   "engines": {
     "vscode": "^1.77.0"
@@ -24,7 +24,7 @@
     "type": "git",
     "url": "https://github.com/langstream/vscode-extension"
   },
-  "icon": "images/AI-Logo.png",
+  "icon": "images/logo.png",
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -161,9 +161,9 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "icon": "images/AI-Logo.svg",
+          "icon": "images/bg.svg",
           "id": "langStreamView",
-          "title": "AI Streams"
+          "title": "LangStream"
         }
       ]
     },
