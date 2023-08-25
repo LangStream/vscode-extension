@@ -10,3 +10,5 @@ out/
 /src/test/assets/**.zip
 
 .github/openapi/openapi-generator-cli-6.6.0.jar
+
+src/test/assets/test-app/secrets.yaml

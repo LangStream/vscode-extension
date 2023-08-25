@@ -156,7 +156,8 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
     // Discover adjacent application files
     const thisDir = path.parse(modulePath).dir;
     fs.readdirSync(thisDir, { withFileTypes: true }).forEach((value:fs.Dirent) => {
-      if(value.isDirectory()){
+      if(value.isDirectory() && value.name.toLowerCase() === 'python'){
+        pythonDir = path.join(thisDir, value.name);
         return;
       }
 
@@ -173,8 +174,7 @@ export default class DeployApplicationModuleCodeLens implements vscode.CodeLensP
     // Look in parent directory for instance.yaml and secrets.yaml and python files
     const parentDir = path.parse(thisDir).dir;
     fs.readdirSync(parentDir, { withFileTypes: true }).forEach((value:fs.Dirent) => {
-      if(value.isDirectory() && value.name.toLowerCase() === 'python'){
-        pythonDir = path.join(parentDir, value.name);
+      if(value.isDirectory()){
         return;
       }
 

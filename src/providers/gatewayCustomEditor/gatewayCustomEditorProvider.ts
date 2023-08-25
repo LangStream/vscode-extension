@@ -69,19 +69,19 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
 
               websocket.on("message", (data: any) => {
                 const message = data.toString();
-Logger.info("Received message from gateway");
-Logger.info(message);
+// Logger.info("Received message from gateway");
+// Logger.info(message);
 
                 const consumePushMessage = ConsumePushMessage.tryCast(message);
                 if(consumePushMessage !== undefined){
-                  Logger.info("Received consume push message from gateway");
-                  webviewPanel?.webview?.postMessage({command: "consumeMessage", text: consumePushMessage, gatewayId: gatewayWebSocket.gateway.id});
+                  //Logger.info("Received consume push message from gateway");
+                  webviewPanel?.webview?.postMessage({command: "consumeMessage", text: consumePushMessage, gatewayId: gatewayWebSocket.gateway.id, contentType: consumePushMessage.contentType()});
                   return;
                 }
 
                 const produceResponse = ProduceResponse.tryCast(message);
                 if(produceResponse !== undefined){
-                  Logger.info("Received produce response from gateway");
+                  //Logger.info("Received produce response from gateway");
                   webviewPanel?.webview?.postMessage({command: "produceResponse", text: produceResponse, gatewayId: gatewayWebSocket.gateway.id});
                   return;
                 }
@@ -114,6 +114,8 @@ Logger.info(message);
               return;
             }
 
+            const consumePushMessage = new ConsumePushMessage(new Record(null, null, message.text), "");
+            webviewPanel?.webview?.postMessage({command: "userMessage", text: consumePushMessage, gatewayId: gateway[0].id, contentType: consumePushMessage.contentType()});
             Logger.info(`Successfully sent message to gateway ${gateway[0].id}`);
           });
 
@@ -278,10 +280,29 @@ class ConsumePushMessage {
       return undefined;
     }
   }
+
+  public contentType(): string | undefined {
+    if(this.record.value === undefined || this.record.value === null){
+      return undefined;
+    }
+
+    try{
+      JSON.parse(this.record.value);
+      return "application/json";
+    }catch {}
+
+    const htmlRegex = new RegExp(/(<(\/)?(html))/gi);
+
+    if (htmlRegex.test(this.record.value)) {
+      return "text/html";
+    }
+
+    return "text/plain";
+  }
 }
 
 class Record {
   constructor(public readonly headers: Map<string,string> | null,
               public readonly key: {} | null,
-              public readonly value: {} | null){}
+              public readonly value: any){}
 }
