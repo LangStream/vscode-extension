@@ -17,7 +17,7 @@ import {IGatewayNode} from "./providers/controlPlaneTreeData/nodes/gateway";
 import TDeployableApplication from "./types/tDeployableApplication";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-	Logger.info('Welcome to the Ai Streams extension. There are many wonderful things to see and click.');
+	Logger.info('Welcome to the LangStream extension. There are many wonderful things to see and click.');
 
 	Logger.info('Building providers');
 	const controlPlaneTreeProvider = new ControlPlaneTreeDataProvider();

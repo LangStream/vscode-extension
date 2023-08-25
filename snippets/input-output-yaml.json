@@ -1,7 +1,7 @@
 {
   "S3 Source": {
     "prefix": ["s3-source","input-output"],
-    "description": "AI streams agent that watches an S3 bucket for new documents",
+    "description": "LangStream agent that watches an S3 bucket for new documents",
     "body": [
       "- name: \"Read from S3\"",
       "\ttype: \"s3-source\"",
@@ -21,7 +21,7 @@
   },
   "Kafka Sink":{
     "prefix": ["sink","input-output"],
-    "description": "AI streams agent that implements a Kafka sink connector",
+    "description": "LangStream agent that implements a Kafka sink connector",
     "body": [
       "${LINE_COMMENT} Remember to set the corresponding dependency in configuration.",
       "- name: \"A Kafka sink\"",
@@ -34,7 +34,7 @@
   },
   "Kafka Connect Sink for Apache Cassandra from DataStax": {
     "prefix": ["cassandra-sink","input-output"],
-    "description": "AI streams agent that implements a Kafka sink connector for Apache Cassandra",
+    "description": "LangStream agent that implements a Kafka sink connector for Apache Cassandra",
     "body": [
       "${LINE_COMMENT} Remember to set the corresponding dependency in configuration.",
       "- name: \"Write to Cassandra\"",
@@ -49,6 +49,26 @@
       "\t\t\"auth.username\": \"{{{ secrets.cassandra.username }}}\"",
       "\t\t\"auth.password\": \"{{{ secrets.cassandra.password }}}\"",
       "\t\t\"topic.input-topic.vsearch.products.mapping\": \"id=value.id,description=value.description,name=value.name\""
+    ]
+  },
+  "Webcrawler source": {
+    "prefix": ["webcrawler-source","input-output"],
+    "description": "LangStream agent that crawls a website and outputs the site's URL (in headers) and an HTML document",
+    "body": [
+      "- name: \"Crawl the WebSite\"",
+      "\ttype: \"webcrawler-source\"",
+      "\toutput: \"output-topic\"",
+      "\tconfiguration:",
+      "\t\t\"seed-urls\": \"https://docs.langstream.ai\"",
+      "\t\t\"allowed-domains\": \"https://docs.langstream.ai\"",
+      "\t\t\"min-time-between-requests\": 100",
+      "\t\t\"max-unflushed-pages\": 100",
+      "\t\t\"user-agent\": \"langstream.ai-webcrawler/1.0\"",
+      "\t\t\"bucketName\": \"{{{secrets.s3.bucket-name}}}\"",
+      "\t\t\"endpoint\": \"{{{secrets.s3.endpoint}}}\"",
+      "\t\t\"access-key\": \"{{{secrets.s3.username}}}\"",
+      "\t\t\"secret-key\": \"{{{secrets.s3.password}}}\"",
+      "\t\t\"idle-time\": 5"
     ]
   }
 }
