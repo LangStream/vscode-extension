@@ -4,7 +4,7 @@
       "ai-chat-completions",
       "ai-actions"
     ],
-    "description": "AI streams agent that submits a prompt to an AI model and returns the result",
+    "description": "LangStream agent that submits a prompt to an AI model and returns the result",
     "body": [
       "- name: \"AI completion\"",
         "\ttype: \"ai-chat-completions\" ${LINE_COMMENT} don't forget to add a compatible AI model in configuration.resources",
@@ -26,7 +26,7 @@
       "compute-ai-embeddings",
       "ai-actions"
     ],
-    "description": "AI streams agent that computes embeddings for a given text",
+    "description": "LangStream agent that computes embeddings for a given text",
     "body": [
       "- name: \"AI embedding\"",
       "\ttype: \"compute-ai-embeddings\" ${LINE_COMMENT} don't forget to add a compatible AI model in configuration.resources",
@@ -43,7 +43,7 @@
       "language-detector",
       "ai-actions"
     ],
-    "description": "AI streams agent that detects the language of a given text",
+    "description": "LangStream agent that detects the language of a given text",
     "body": [
       "- name: \"Language detector\"",
       "\ttype: \"language-detector\"",
