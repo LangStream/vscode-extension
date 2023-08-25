@@ -28,20 +28,34 @@ class MessageManager {
       msgClass = 'text-dark bg-light text-start';
     }
 
+    const messageId = message.messageId;
     const messageText = message.text;
+    const contentType = message.contentType ?? "text/plain";
 
     const messageRecord = messageText.record;
-    console.log(messageRecord);
 
     switch (message.command){
       case "userMessage":
       case "consumeMessage":
 
-        let messagePayload = "";
-        try{
-          messagePayload = JSON.stringify(JSON.parse(messageRecord.value), null, 2);
-        }catch{
-          messagePayload = messageRecord.value;
+        let messagePayload = messageRecord.value; // "text/plain"
+
+        switch(contentType) {
+          case "application/json":
+            try{
+              messagePayload = JSON.stringify(JSON.parse(messageRecord.value), null, 2);
+            }catch{}
+            break;
+          case "text/html":
+            try{
+              messagePayload = messageRecord.value
+                                              .replace(/&/g, '&amp')
+                                              .replace(/'/g, '&apos')
+                                              .replace(/"/g, '&quot')
+                                              .replace(/>/g, '&gt')
+                                              .replace(/</g, '&lt');
+            }catch{}
+            break;
         }
 
         let headers = "";
@@ -51,6 +65,8 @@ class MessageManager {
           headers = messageRecord.headers;
         }
 
+        const strEllipse = messagePayload.length > 100 ? '(expand to view message)' : messagePayload;
+
         return `
     <div class="w-100 d-flex ${msgContainerClass}">
         <div class="row mx-4" style="width: 52%!important;">
@@ -59,7 +75,15 @@ class MessageManager {
               <div class="col-12"><span class="text-muted">${label}:</span> ${message.gatewayId}</div>
               <div class="col-12"><span class="text-muted">key:</span> ${messageRecord.key ?? "<span class=\"text-muted\">none</span>"}</div>
               <div class="col-12"><span class="text-muted">headers:</span> <code>${headers ?? ""}</code></div>
-              <div class="col-12 pt-2"><pre><code>${messagePayload ?? ""}</code></pre></div>
+              <div class="col-12 pt-2">
+              <a class="text-decoration-none" href="#collapseExample" data-bs-toggle="collapse" data-bs-target="#coll${messageId}" aria-expanded="false" aria-controls="coll${messageId}">
+      ${strEllipse}
+    </a>
+    <div class="collapse" id="coll${messageId}">
+        <div class="card card-body" style="color: var(--vscode-foreground)"><pre><code>${messagePayload ?? ""}</code></pre></div>
+    </div>
+  
+    </div>
             </div>
           </div>
         </div>
@@ -81,43 +105,14 @@ class MessageManager {
     }
   }
 
-  add(gatewayMessage, formatMessage=true) { //type: TopicMessage
-    // if(formatMessage) {
-    //   topicMessage.formatedMessageSizeBytes = this.formatMessageSize(topicMessage.messageSizeBytes);
-    //   topicMessage.formattedPublishTime = this.formatPublishTime(topicMessage.publishTime);
-    // }
-
+  add(gatewayMessage) {
+    gatewayMessage.messageId = (Math.random().toString(36).substring(2) + Date.now().toString(36));
     this._listJs.add(gatewayMessage);
     this.refreshInfo();
     this.filter();
   }
 
   refreshInfo(){
-    // document.getElementById('messagesCount').innerText = this._listJs.items.length.toString();
-    // document.getElementById('avgMessageSize').innerText = this.formatMessageSize(this._avgMessageSizeBytes);
-  }
-
-  formatMessageSize(messageSizeBytes){
-    if(!messageSizeBytes){
-      return '0';
-    }
-
-    if(messageSizeBytes > 1024){
-      return (messageSizeBytes / 1024).toFixed(2) + ' KB';
-    }else if(messageSizeBytes > 1024 * 1024){
-      return (messageSizeBytes / 1024 / 1024).toFixed(2) + ' MB';
-    }else if(messageSizeBytes > 1024 * 1024 * 1024){
-      return (messageSizeBytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
-    }
-
-    return messageSizeBytes.toFixed(2)  + ' Bytes';
-  }
-
-  formatPublishTime(messagePublishTime){
-    const pubTime = new Date(messagePublishTime);
-    return pubTime.toISOString()
-                  .replace('T', ' ')
-                  .replace('Z', '');
   }
 
   showError(text) {

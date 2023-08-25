@@ -15,11 +15,7 @@ function sendUserMessage(gatewayId, text){
   document.getElementById('message-text').value = "";
 }
 
-function sendMsg(command, text, gatewayId, addToMessagesList = false) {
-  if(addToMessagesList === true){
-    messageManager.add({ command: command, text: {record: { headers: null, key: null, value: text}}, gatewayId: gatewayId });
-  }
-
+function sendMsg(command, text, gatewayId) {
   vscode.postMessage({ command: command, text: text, gatewayId: gatewayId });
 }
 
@@ -55,9 +51,8 @@ window.addEventListener('message', event => {
       }
       break;
     case "produceResponse" :
-      messageManager.add(messageData);
-      break;
     case "consumeMessage" :
+    case "userMessage" :
       messageManager.add(messageData);
       break;
     default: // info
