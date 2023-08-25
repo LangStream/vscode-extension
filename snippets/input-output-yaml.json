@@ -70,5 +70,21 @@
       "\t\t\"secret-key\": \"{{{secrets.s3.password}}}\"",
       "\t\t\"idle-time\": 5"
     ]
+  },
+  "Vector database sink": {
+    "prefix": ["vector-db-sink","input-output"],
+    "description": "LangStream agent that writes to a vector database like Pinecone or AstraDB",
+    "body": [
+      "${LINE_COMMENT} Remember to set the corresponding \"PineconeDatasource\" in configuration.",
+      "- name: \"Write to Pinecone\"",
+      "\ttype: \"vector-db-sink\"",
+      "\tinput: \"input-topic\"",
+      "\tconfiguration:",
+      "\t\t\"datasource\": \"PineconeDatasource\"",
+      "\t\t\"vector.id\": \"value.id\"",
+      "\t\t\"vector.vector\": \"value.embeddings\"",
+      "\t\t\"vector.namespace\": \"\"",
+      "\t\t\"vector.metadata.genre\": \"value.genre\""
+    ]
   }
 }
