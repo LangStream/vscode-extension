@@ -50,7 +50,7 @@ export default class GatewayMessenger {
   }
 
   handleMessage(message) {
-    console.debug("Received message from extension", message);
+    //console.debug("Received message from extension", message);
     const messageData = message.data; // The JSON data from the extension
 
     switch (messageData.command) {

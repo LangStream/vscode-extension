@@ -28,7 +28,7 @@ export default class WatchTenantAddingTask implements TObservableTask<TenantConf
     };
   };
 
-  onFinish = (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean): void => {
+  onFinish = (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean, wasAborted: boolean): void => {
 
     if(waitExpired){
       window.showInformationMessage(`Timeout waiting for status of tenant ${this.tenantName}`);
@@ -37,6 +37,10 @@ export default class WatchTenantAddingTask implements TObservableTask<TenantConf
 
     if(hasErrors){
       window.showErrorMessage(`Too many errors found for tenant ${this.tenantName}. Check status for more details`);
+      return;
+    }
+
+    if(wasCancelled || wasAborted){
       return;
     }
 

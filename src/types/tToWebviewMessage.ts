@@ -11,4 +11,5 @@ export enum ToWebviewMessageCommandEnum {
   consumeMessage = "consumeMessage",
   produceResponse = "produceResponse",
   userMessage = "userMessage",
+  appLog = "appLog",
 }

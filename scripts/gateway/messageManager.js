@@ -73,7 +73,7 @@ export default class MessageManager {
         break;
     }
 
-    console.debug(gatewayMessage);
+    //console.debug(gatewayMessage);
 
     this._listJs.add(gatewayMessage);
     this.refreshInfo();

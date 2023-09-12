@@ -21,7 +21,7 @@ if (bodyTheme) {
 
 
 //=============================================================================
-// EVENT LISTENERS
+// LOAD PAGE
 //=============================================================================
 window.addEventListener('load', async () => {
   const gatewayMessenger = new GatewayMessenger();

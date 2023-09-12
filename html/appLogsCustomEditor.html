@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' CSPSOURCE; img-src CSPSOURCE https:; script-src 'unsafe-inline' CSPSOURCE;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="STYLESURI" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>${displayTitle}</title>
+  <style>
+      #messages-container {
+          height: 80%;
+          overflow: auto;
+          display: flex;
+          flex-direction: column-reverse;
+      }
+  </style>
+</head>
+<body class="vsCodePulsarAdminWizard">
+  <div class="container " style="height: 97vh!important;">
+    <div class="row mb-2">
+      <div class="col-12">
+        <div class="alert alert-info d-none" role="alert" id="pageMessage"></div>
+        <div class="alert alert-danger d-none" role="alert" id="pageError"></div>
+      </div>
+    </div>
+
+    <div class="row pb-2 border-bottom">
+      <div class="col">
+        <div class="card">
+          <div class="card-header text-muted">Search</div>
+          <div class="card-body p-4">
+            <div class="input-group">
+              <span class="input-group-text fs-6 d-none d-lg-flex" id="message-payload">Log Message</span>
+              <input type="text" id="search-message-payload" class="form-control" placeholder="" aria-label="" aria-describedby="message-payload">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="card">
+          <div class="card-header text-muted">Filter</div>
+          <div class="card-body p-2 text-center">
+            <div class="text-start">Level</div>
+            <div class="btn-group d-none d-md-flex" role="group" aria-label="Log level">
+              <input type="radio" class="btn-check" name="logLevel" id="logLevelError" autocomplete="off" value="error">
+              <label class="btn btn-outline-primary" for="logLevelError">Error</label>
+
+              <input type="radio" class="btn-check" name="logLevel" id="logLevelWarn" autocomplete="off" value="warn">
+              <label class="btn btn-outline-primary" for="logLevelWarn">Warn</label>
+
+              <input type="radio" class="btn-check" name="logLevel" id="logLevelInfo" autocomplete="off" value="info">
+              <label class="btn btn-outline-primary" for="logLevelInfo">Info</label>
+            </div>
+            <div class="btn-group d-none d-md-flex" role="group" aria-label="Log level">
+              <input type="radio" class="btn-check" name="logLevel" id="logLevelDebug" autocomplete="off" value="debug">
+              <label class="btn btn-outline-primary" for="logLevelDebug">Debug</label>
+
+              <input type="radio" class="btn-check" checked name="logLevel" id="logLevelAll" autocomplete="off" value="all">
+              <label class="btn btn-outline-primary" for="logLevelAll">All</label>
+            </div>
+            <div class="d-md-none" aria-label="Log level">
+              <select class="form-select" id="logLevelSelect" onchange="document.getElementById(document.getElementById('logLevelSelect').value).checked = true;">
+                <option value="logLevelError">error</option>
+                <option value="logLevelWarn">warn</option>
+                <option value="logLevelInfo">info</option>
+                <option value="logLevelDebug">debug</option>
+                <option value="logLevelAll" selected>All</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-2">
+        <div class="card">
+          <div class="card-header text-muted">Status</div>
+          <div class="card-body p-3">
+            <div class="d-none" id="retry-messages">
+              Connection closed. <a href="#" id="retry-messages-link">Retry</a>.
+            </div>
+            <div class="d-none" id="watching-messages">
+              Watching for messages. <a href="#" id="close-socket-link">Close</a>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row overflow-y-scroll" style="height: 85%!important;">
+      <div class="col-12 h-100" id="messages-container">
+        <table class="table table-striped table-responsive" id="messages-list">
+          <thead style="position: sticky;top: 0">
+          <tr>
+            <th scope="col">Timestamp</th>
+            <th scope="col">Level</th>
+            <th scope="col">Worker & Message</th>
+          </tr>
+          </thead>
+          <tbody class="list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <div style="display:none;">
+    <table>
+      <tr id="list-item">
+        <td class="timestamp"></td>
+        <td class="level"></td>
+        <td class="logColor" style="color: white;">
+          <div class="workerColor text-muted" style="color: white;"><span class="worker"></span></div>
+          <div class="message"></div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <script src="BOOTSTRAPJSURI"></script>
+  <script src="LISTMINURI"></script>
+  <script type="module" src="LOGSINDEX"></script>
+</body>
+</html>

@@ -24,9 +24,10 @@ export default class TenantController {
     }));
 
     Logger.debug("Sending delete command");
+    const abortController = new AbortController();
     const deletePromises = Promise.all([
       tenantService.delete(tenantName),
-      new ProgressRunner<TenantConfiguration>("Delete tenant").run(task)
+      new ProgressRunner<TenantConfiguration>("Delete tenant").run(task, abortController.signal)
     ]);
 
     await deletePromises.then(() => {
@@ -63,6 +64,7 @@ export default class TenantController {
 
     Logger.debug("Sending add command");
 
+    const abortController = new AbortController();
     const tenantService = new TenantService(controlPlaneNode.savedControlPlane);
     const task = new WatchTenantAddingTask(tenantName, tenantService, () => new Promise<void>(() => {
       controlPlaneTreeProvider.refresh(controlPlaneNode);
@@ -70,7 +72,7 @@ export default class TenantController {
 
     const promises = Promise.all([
       tenantService.add(tenantName),
-      new ProgressRunner<TenantConfiguration>("Add tenant").run(task)
+      new ProgressRunner<TenantConfiguration>("Add tenant").run(task, abortController.signal)
     ]);
 
     await promises.then(() => {

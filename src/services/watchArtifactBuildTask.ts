@@ -2,8 +2,9 @@ import {ProgressReport, TObservableTask} from "../types/tObservableTask";
 import * as fs from "fs";
 import * as fflate from "fflate";
 import Logger from "../common/logger";
+import * as vscode from "vscode";
 
-export default class WatchZipApplicationTask implements TObservableTask<Uint8Array> {
+export default class WatchArtifactBuildTask implements TObservableTask<Uint8Array> {
   constructor(private readonly zipFilePath: string) {}
   action(): Promise<Uint8Array | undefined> {
     return new Promise<Uint8Array | undefined>((resolve, reject) => {
@@ -17,7 +18,7 @@ export default class WatchZipApplicationTask implements TObservableTask<Uint8Arr
             resolve(undefined);
           }
 
-          Logger.debug(`Artifact size: ${data.length/1000/1000} mb`);
+          Logger.debug(`Artifact size: ${data?.length/1000 ?? "??"} kb`);
           resolve(data as Uint8Array);
         });
       }catch (e) {
@@ -45,17 +46,19 @@ export default class WatchZipApplicationTask implements TObservableTask<Uint8Arr
   hasErrors(fileBuffer: Uint8Array | undefined): boolean {
     return false;
   }
-  onFinish(waitExpired: boolean, wasCancelled: boolean, hasErrors: boolean): void {
+  onFinish(waitExpired: boolean, wasCancelled: boolean, hasErrors: boolean, wasAborted: boolean): void {
     if(waitExpired){
-      throw new Error(`Timeout while waiting for artifact to be created`);
+      vscode.window.showInformationMessage(`Timeout while waiting for artifact to be created`);
+      return;
     }
 
     if(wasCancelled){
-      throw new Error(`Cancelled while waiting for artifact to be created`);
+      return;
     }
 
     if(hasErrors){
-      throw new Error(`Errors were reported while waiting for artifact to be created`);
+      vscode.window.showErrorMessage(`Errors were reported while waiting for artifact to be created`);
+      return;
     }
   }
   onProgress(fileBuffer: Uint8Array | undefined): ProgressReport {
