@@ -26,6 +26,7 @@ import {gatherDirFiles} from "../utils/gatherDirFiles";
 import {TArtifactItem} from "../types/tArtifactItem";
 import {writeApplicationAsFiles} from "../utils/writeApplicationAsFiles";
 import WatchApplicationUpdateTask from "../services/watchApplicationUpdateTask";
+import randomNumberString from "../utils/randomNumberString";
 
 export default class ApplicationController {
   public static async delete(applicationNode: IApplicationNode, controlPlaneTreeProvider: ControlPlaneTreeDataProvider): Promise<void> {
@@ -308,7 +309,8 @@ export default class ApplicationController {
   public static async openGatewayCustomEditor(applicationNode: IApplicationNode): Promise<void>  {
     const virtualFilePath = path.join(applicationNode.controlPlane.name,
       applicationNode.tenantName,
-      `${applicationNode.applicationId}.gateway.${Constants.LANGUAGE_NAME}`
+      randomNumberString(5),
+      `${applicationNode.applicationId}.gateway.${Constants.LANGUAGE_NAME}`,
     );
 
     const uri = vscode.Uri.from({

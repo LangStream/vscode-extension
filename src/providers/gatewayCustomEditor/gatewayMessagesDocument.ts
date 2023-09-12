@@ -4,6 +4,7 @@ import ErrnoException = NodeJS.ErrnoException;
 import TopicMessageDocumentContent from "./gatewayMessageDocumentContent";
 import Logger from "../../common/logger";
 import * as Constants from "../../common/constants";
+import ConfigurationProvider from "../configuration";
 
 export default class GatewayMessagesDocument implements vscode.CustomDocument {
   public static async create(uri: vscode.Uri, backupId: string | undefined): Promise<GatewayMessagesDocument> {
@@ -40,9 +41,10 @@ export default class GatewayMessagesDocument implements vscode.CustomDocument {
 
       const controlPlaneName = uriParts[0];
       const tenantName = uriParts[1];
-      const applicationId = uriParts[2].replace(`.gateway.${Constants.LANGUAGE_NAME}`, '');
+      //const rand = uriParts[2];
+      const applicationId = uriParts[3].replace(`.gateway.${Constants.LANGUAGE_NAME}`, '');
 
-      const newTopicContent = await TopicMessageDocumentContent.build(controlPlaneName, tenantName, applicationId);
+      const newTopicContent = await TopicMessageDocumentContent.build(controlPlaneName, tenantName, applicationId, ConfigurationProvider.getSavedControlPlanes());
 
       return new GatewayMessagesDocument(uri, newTopicContent);
     }

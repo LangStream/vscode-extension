@@ -16,6 +16,14 @@
 				"showReuseMessage": true,
 				"clear": false,
 				"group": "watchers"
+			},
+			"options": {
+				"shell": {
+					"executable": "bash",
+					"args": [
+						"-c"
+					]
+				}
 			}
 		},
 		{
