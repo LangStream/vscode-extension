@@ -7,6 +7,7 @@ export interface IFolderNode extends vscode.TreeItem {
   readonly treeContents: any;
   readonly controlPlane: TSavedControlPlane;
   readonly tenantName: string;
+  readonly applicationId: string;
 }
 
 export default class FolderNode extends vscode.TreeItem implements IFolderNode {
@@ -14,7 +15,8 @@ export default class FolderNode extends vscode.TreeItem implements IFolderNode {
               readonly folderType: Constants.ExplorerFolderTypes,
               readonly treeContents: any,
               readonly controlPlane: TSavedControlPlane,
-              readonly tenantName: string) {
+              readonly tenantName: string,
+              readonly applicationId: string) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
     this.contextValue = Constants.CONTEXT_VALUES.folder;
   }

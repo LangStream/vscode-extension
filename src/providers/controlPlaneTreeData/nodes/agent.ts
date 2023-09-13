@@ -6,29 +6,42 @@ import * as lsModels from "../../../services/controlPlaneApi/gen/models";
 import {IErrorNode} from "./error";
 import {IPipelineNode} from "./pipeline";
 import * as path from "path";
+import {TSavedControlPlane} from "../../../types/tSavedControlPlane";
+import {IAgentConfiguration} from "../../../interfaces/iAgentConfiguration";
+import {AgentLifecycleStatusStatusEnum, ApplicationLifecycleStatusStatusEnum} from "../../../services/controlPlaneApi/gen/models";
 
 export interface IAgentNode extends vscode.TreeItem {
-  readonly agent: lsModels.AgentConfiguration;
+  readonly agent: IAgentConfiguration;
+  readonly controlPlane: TSavedControlPlane;
+  readonly tenantName: string;
+  readonly applicationId: string;
 }
 
 export class AgentNode extends vscode.TreeItem implements IAgentNode {
-  constructor(readonly agent: lsModels.AgentConfiguration) {
+  constructor(readonly agent: IAgentConfiguration, readonly controlPlane: TSavedControlPlane, readonly tenantName: string, readonly applicationId: string) {
     super("unknown", vscode.TreeItemCollapsibleState.None);
     this.description = `Agent`;
     this.contextValue = Constants.CONTEXT_VALUES.agent;
     this.label = this.decideLabel(agent);
 
-    switch(agent.errors?.retries ?? 0) {
-      case 0:
+    switch(agent.executor?.status?.status ?? AgentLifecycleStatusStatusEnum.error) {
+      case AgentLifecycleStatusStatusEnum.deployed:
         this.iconPath = {
           light: path.join(__dirname, "..", "images", "light", "agent-green.png"),
           dark: path.join(__dirname, "..", "images", "dark", "agent-green.png")
         };
         break;
-      default:
+      case AgentLifecycleStatusStatusEnum.deploying:
+      case AgentLifecycleStatusStatusEnum.created:
         this.iconPath = {
           light: path.join(__dirname, "..", "images", "light", "agent-yellow.png"),
           dark: path.join(__dirname, "..", "images", "dark", "agent-yellow.png")
+        };
+        break;
+      default: //error
+        this.iconPath = {
+          light: path.join(__dirname, "..", "images", "light", "agent-red.png"),
+          dark: path.join(__dirname, "..", "images", "dark", "agent-red.png")
         };
         break;
     }
@@ -64,17 +77,20 @@ export class AgentNode extends vscode.TreeItem implements IAgentNode {
 }
 
 export default class AgentTree {
+  constructor(private readonly controlPlane: TSavedControlPlane, private readonly tenantName: string, private readonly applicationId: string) {
+
+  }
   public async getChildren(pipelineNode: IPipelineNode): Promise<TAllExplorerNodeTypes[]> {
     if(!pipelineNode) { return []; }
 
-    if((pipelineNode.pipeline?.agents ?? 0) === 0) {
+    if((pipelineNode.pipeline.agents?.length ?? 0) === 0) {
       return [new MessageNode(Constants.ExplorerMessageTypes.noAgents)];
     }
 
     const agentNodes: (IAgentNode|IErrorNode)[] = [];
 
-    for(const agent of pipelineNode.pipeline.agents!) {
-      agentNodes.push(new AgentNode(agent));
+    for(const agent of (pipelineNode.pipeline.agents ?? [])) {
+      agentNodes.push(new AgentNode(agent, this.controlPlane, this.tenantName, this.applicationId));
     }
 
     return agentNodes;

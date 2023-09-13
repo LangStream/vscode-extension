@@ -19,7 +19,7 @@ if (bodyTheme) {
 //=============================================================================
 // LOAD PAGE
 //=============================================================================
-window.addEventListener('load', event => {
+window.addEventListener('load', () => {
   const messenger = new LogsMessenger();
   messenger.initialize();
 

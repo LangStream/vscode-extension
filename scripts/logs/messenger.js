@@ -25,7 +25,6 @@ export default class LogsMessenger {
       }
     });
   }
-
   handleMessage(event) {
     //console.log(event);
     const messageData = event.data; // The JSON data from the extension
@@ -59,7 +58,6 @@ export default class LogsMessenger {
         break;
     }
   }
-
   sendMessage(command, text) {
     const message = { command: command, text: text};
     this.vscode.postMessage(message);

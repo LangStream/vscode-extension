@@ -28,6 +28,7 @@ import WatchApplicationUpdateTask from "../services/watchApplicationUpdateTask";
 import randomNumberString from "../utils/randomNumberString";
 import WatchArtifactBuildTask from "../services/watchArtifactBuildTask";
 import {CancellationTokenSource} from "vscode";
+import {IAgentNode} from "../providers/controlPlaneTreeData/nodes/agent";
 
 export default class ApplicationController {
   public static async delete(applicationNode: IApplicationNode, controlPlaneTreeProvider: ControlPlaneTreeDataProvider): Promise<void> {
@@ -335,16 +336,20 @@ export default class ApplicationController {
     return new AppLogsCustomEditorProvider(context);
   }
 
-  public static async openAppLogsCustomEditor(applicationNode: IApplicationNode): Promise<void>  {
-    const virtualFilePath = path.join(applicationNode.controlPlane.name,
-      applicationNode.tenantName,
-      `${applicationNode.applicationId}.logs.${Constants.LANGUAGE_NAME}`
+  public static async openAgentLogsCustomEditor(agentNode: IAgentNode): Promise<void>  {
+    const virtualFilePath = path.join(agentNode.controlPlane.name,
+                                      agentNode.tenantName,
+                                      `${agentNode.applicationId}.logs.${Constants.LANGUAGE_NAME}`
     );
 
-    const uri = vscode.Uri.from({
+    let uri = vscode.Uri.from({
       scheme: 'untitled',
       path: virtualFilePath.toLowerCase()
     });
+
+    const workerIds = agentNode.agent.executor?.replicas?.map((replica) => replica.id).join(",");
+
+    uri = uri.with({query: `workerIds=${workerIds}`});
 
     vscode.commands.executeCommand('vscode.openWith', uri, Constants.APP_LOGS_CUSTOM_EDITOR_VIEW_TYPE);
   }

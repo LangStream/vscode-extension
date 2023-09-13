@@ -2,23 +2,27 @@ import * as vscode from "vscode";
 import * as Constants from "../../../common/constants";
 import {TAllExplorerNodeTypes} from "../../../types/tAllExplorerNodeTypes";
 import MessageNode from "./message";
-import * as lsModels from "../../../services/controlPlaneApi/gen/models";
 import {IErrorNode} from "./error";
 import {IModuleNode} from "./module";
+import {TSavedControlPlane} from "../../../types/tSavedControlPlane";
+import {IPipeline} from "../../../interfaces/iPipeline";
 
 export interface IPipelineNode extends vscode.TreeItem {
-  readonly pipeline: lsModels.Pipeline;
+  readonly pipeline: IPipeline;
+  readonly controlPlane: TSavedControlPlane;
+  readonly tenantName: string;
+  readonly applicationId: string;
 }
 
 export class PipelineNode extends vscode.TreeItem implements IPipelineNode {
-  constructor(readonly pipeline: lsModels.Pipeline) {
+  constructor(readonly pipeline: IPipeline, readonly controlPlane: TSavedControlPlane, readonly tenantName: string, readonly applicationId: string) {
     super("unknown", vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `Pipeline`;
     this.contextValue = `${Constants.CONTEXT_VALUES.pipeline}.${(pipeline.errors?.retries ?? 0) > 0 ? "errors" : "healthy"}`;
     this.label = this.decideLabel(pipeline);
   }
 
-  private decideLabel(pipeline: lsModels.Pipeline): string {
+  private decideLabel(pipeline: IPipeline): string {
     const name: string | undefined | null = pipeline.name?.trim()
                   .replace(/'null'/g, "")
                   .replace(/"null"/g, "")
@@ -48,6 +52,7 @@ export class PipelineNode extends vscode.TreeItem implements IPipelineNode {
 }
 
 export default class PipelineTree {
+  constructor(private readonly controlPlane: TSavedControlPlane, private readonly tenantName: string, private readonly applicationId: string) {  }
   public async getChildren(moduleNode: IModuleNode): Promise<TAllExplorerNodeTypes[]> {
     if(!moduleNode) { return []; }
 
@@ -58,7 +63,7 @@ export default class PipelineTree {
     const pipelineNodes: (IPipelineNode|IErrorNode)[] = [];
 
     for(const pipeline of moduleNode.pipelines) {
-      pipelineNodes.push(new PipelineNode(pipeline));
+      pipelineNodes.push(new PipelineNode(pipeline, this.controlPlane, this.tenantName, this.applicationId));
     }
 
     return pipelineNodes;

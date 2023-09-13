@@ -25,12 +25,6 @@ export default class MessageManager {
       this.search();
     });
 
-    document.getElementsByName("publishDate").forEach((element) => {
-      element.addEventListener('change', () => {
-        this.filter();
-      });
-    });
-
     document.getElementsByName("logLevel").forEach((element) => {
       element.addEventListener('change', () => {
         this.filter();

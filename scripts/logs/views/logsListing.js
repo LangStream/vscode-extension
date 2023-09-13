@@ -6,11 +6,11 @@ export default class LogListingView {
   }
 
   initialize() {
-    document.getElementById("retry-messages-link").addEventListener('click', event => {
+    document.getElementById("retry-messages-link").addEventListener('click', () => {
       this.reconnectSocket();
     });
 
-    document.getElementById("close-socket-link").addEventListener('click', event => {
+    document.getElementById("close-socket-link").addEventListener('click', () => {
       this.closeSocket();
     });
   }

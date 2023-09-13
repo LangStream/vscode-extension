@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' CSPSOURCE; img-src CSPSOURCE https:; script-src 'unsafe-inline' CSPSOURCE;">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'unsafe-inline' CSPSOURCE; img-src CSPSOURCE https: data:; script-src 'unsafe-inline' CSPSOURCE;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="STYLESURI" rel="stylesheet">
   <meta charset="UTF-8">
@@ -44,20 +45,20 @@
             <div class="text-start">Level</div>
             <div class="btn-group d-none d-md-flex" role="group" aria-label="Log level">
               <input type="radio" class="btn-check" name="logLevel" id="logLevelError" autocomplete="off" value="error">
-              <label class="btn btn-outline-primary" for="logLevelError">Error</label>
+              <label class="btn btn-outline-primary btn-sm" for="logLevelError">Error</label>
 
               <input type="radio" class="btn-check" name="logLevel" id="logLevelWarn" autocomplete="off" value="warn">
-              <label class="btn btn-outline-primary" for="logLevelWarn">Warn</label>
+              <label class="btn btn-outline-primary btn-sm" for="logLevelWarn">Warn</label>
 
               <input type="radio" class="btn-check" name="logLevel" id="logLevelInfo" autocomplete="off" value="info">
-              <label class="btn btn-outline-primary" for="logLevelInfo">Info</label>
+              <label class="btn btn-outline-primary btn-sm" for="logLevelInfo">Info</label>
             </div>
             <div class="btn-group d-none d-md-flex" role="group" aria-label="Log level">
               <input type="radio" class="btn-check" name="logLevel" id="logLevelDebug" autocomplete="off" value="debug">
-              <label class="btn btn-outline-primary" for="logLevelDebug">Debug</label>
+              <label class="btn btn-outline-primary btn-sm" for="logLevelDebug">Debug</label>
 
               <input type="radio" class="btn-check" checked name="logLevel" id="logLevelAll" autocomplete="off" value="all">
-              <label class="btn btn-outline-primary" for="logLevelAll">All</label>
+              <label class="btn btn-outline-primary btn-sm" for="logLevelAll">All</label>
             </div>
             <div class="d-md-none" aria-label="Log level">
               <select class="form-select" id="logLevelSelect" onchange="document.getElementById(document.getElementById('logLevelSelect').value).checked = true;">

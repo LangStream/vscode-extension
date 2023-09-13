@@ -80,7 +80,6 @@ export default class AppLogsCustomEditorProvider implements vscode.CustomReadonl
   private async openLogsStream(webview: vscode.Webview, documentContent: AppLogsDocumentContent): Promise<void> {
     const cancellationToken = axios.CancelToken;
     this.cancellationTokenSource = cancellationToken.source();
-    Logger.debug("Opening logs stream");
 
     const url = new URL(documentContent.webServiceUrl);
     url.pathname = path.join("api", "applications", documentContent.tenantName, documentContent.applicationId, "logs");
@@ -88,6 +87,8 @@ export default class AppLogsCustomEditorProvider implements vscode.CustomReadonl
     if(documentContent.workerFilters !== undefined){
       url.searchParams.set("filter", documentContent.workerFilters.join(","));
     }
+
+    Logger.debug("Opening logs stream to " + url.href);
 
     return axios({
       method: 'get',

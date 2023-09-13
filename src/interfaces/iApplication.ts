@@ -3,7 +3,6 @@ import {IInstance} from "./iInstance";
 import {ISecret} from "./iSecret";
 import {IGateway} from "./iGateway";
 import {IModule} from "./iModule";
-import {TArtifactItem} from "../types/tArtifactItem";
 
 /**
  *

@@ -1,4 +1,5 @@
 import * as models from "../services/controlPlaneApi/gen/models";
+import {IPipeline} from "./iPipeline";
 
 /**
  *
@@ -20,10 +21,10 @@ export interface IModule {
   'name': string;
   /**
    *
-   * @type {Pipeline[]}
+   * @type {IPipeline[]}
    * @memberof IModule
    */
-  'pipelines': models.Pipeline[];
+  'pipelines': IPipeline[];
   /**
    *
    * @type {TopicDefinition[]}

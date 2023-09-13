@@ -214,14 +214,14 @@
           "group": "0@3"
         },
         {
-          "command": "extension.langStreamOpenAppLogsEditor",
-          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application\\.*/i",
-          "group": "0@4"
-        },
-        {
           "command": "extension.langStreamRemoveApplication",
           "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application\\.*/i",
           "group": "1@1"
+        },
+        {
+          "command": "extension.langStreamOpenAgentLogsEditor",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.agent/i",
+          "group": "0@1"
         }
       ]
     },
@@ -274,7 +274,7 @@
         "category": "LangStream"
       },
       {
-        "command": "extension.langStreamOpenAppLogsEditor",
+        "command": "extension.langStreamOpenAgentLogsEditor",
         "title": "Logs",
         "category": "LangStream"
       }
