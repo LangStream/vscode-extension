@@ -1,308 +1,261 @@
 import * as vscode from "vscode";
-import {ErrorEvent, MessageEvent, WebSocket} from "ws";
+import {WebSocket} from "ws";
 import GatewayMessagesDocument from "./gatewayMessagesDocument";
 import Logger from "../../common/logger";
-import {AgentConfiguration, Gateway, GatewayTypeEnum} from "../../services/controlPlaneApi/gen";
+import {AgentConfiguration, GatewayTypeEnum} from "../../services/controlPlaneApi/gen";
+import GatewayMessenger from "./messenger";
+import {IGateway} from "../../interfaces/iGateway";
+import GatewayMessageDocumentContent from "./gatewayMessageDocumentContent";
+import {ToWebviewMessageCommandEnum} from "../../types/tToWebviewMessage";
+import GatewayWebSocket from "../../services/gatewayWebSocket";
+import {ToWebviewMessage} from "./toWebviewMessage";
+import {ConsumePushMessage} from "./consumePushMessage";
+import {Record} from "./record";
 
 export default class GatewayCustomEditorProvider implements vscode.CustomReadonlyEditorProvider<GatewayMessagesDocument> {
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  private readonly webSocketTimeoutMs = 10000;
+  private readonly messengers: GatewayMessenger<GatewayTypeEnum>[];
+
+  constructor(private readonly context: vscode.ExtensionContext) {
+    this.messengers = [];
+  }
+
+  private get isWindowRefresh(): boolean {
+    return (this.messengers.length > 0);
+  }
+
+  private disposeMessengers(): void {
+    this.messengers.forEach((messenger) => {
+      messenger.dispose(true);
+    });
+  }
+
+  private handleMessageFromWebview(webview: vscode.Webview, documentContent: GatewayMessageDocumentContent, message: any): void {
+    Logger.debug("Received message from webview");
+    Logger.debug(message);
+
+    message = message as IFromWebviewMessage;
+
+    switch (message.command) {
+      case FromWebviewMessageCommandEnum.setAuthToken:
+        const token = (message.text === "" || message.text === null ? undefined : message.text);
+
+        const clientConsumerGateway = documentContent.consumerGateways.find((gateway) => { return gateway.id === message.gatewayId; });
+        if(clientConsumerGateway !== undefined) {
+          clientConsumerGateway.authorizationToken = token;
+        }
+
+        const clientProducerGateway = documentContent.producerGateways.find((gateway) => { return gateway.id === message.gatewayId; });
+        if(clientProducerGateway !== undefined) {
+          clientProducerGateway.authorizationToken = token;
+        }
+
+        break;
+
+      case FromWebviewMessageCommandEnum.setParamValue:
+        const param = message.text as {key: string, value:string};
+
+        const paramConsumerGateway = documentContent.consumerGateways.find((gateway) => { return gateway.id === message.gatewayId; });
+        if(paramConsumerGateway !== undefined) {
+          if(paramConsumerGateway.parameterValues === undefined) {
+            paramConsumerGateway.parameterValues = {};
+          }
+
+          paramConsumerGateway.parameterValues[param.key] = param.value;
+        }
+
+        const paramProducerGateway = documentContent.producerGateways.find((gateway) => { return gateway.id === message.gatewayId; });
+        if(paramProducerGateway !== undefined) {
+          if(paramProducerGateway.parameterValues === undefined) {
+            paramProducerGateway.parameterValues = {};
+          }
+
+          paramProducerGateway.parameterValues[param.key] = param.value;
+        }
+
+        break;
+
+      case FromWebviewMessageCommandEnum.ready:
+        if (this.isWindowRefresh) { //The websocket is already open, most likely because the tab lost focus
+          this.refreshMessengerState(webview, true);
+          break;
+        }
+
+        this.connectMessengers(webview, documentContent);
+
+        break;
+
+      case FromWebviewMessageCommandEnum.userMessage:
+        const producerGatewayWebSocket = documentContent.producerGatewayWebSockets.find((gatewayWebSocket) => {
+          return (gatewayWebSocket.gatewayId === message.gatewayId);
+        });
+
+        if (producerGatewayWebSocket === undefined) {
+          Logger.warn("Received message from unknown gateway: %o", message);
+          break;
+        }
+
+        Logger.info(`Sending message to gateway ${producerGatewayWebSocket.gatewayId}`);
+
+        GatewayMessenger.addGatewaySearchParams(producerGatewayWebSocket.websocketBaseUrl, message.params, message.options, message.cred);
+
+        this.handleMessageToGateway(webview, producerGatewayWebSocket, message);
+
+        break;
+    }
+  }
+
+  private handleMessageToGateway(webview: vscode.Webview, producerGatewayWebSocket: GatewayWebSocket, message: IFromWebviewMessage): void {
+    const messenger = new GatewayMessenger(GatewayTypeEnum.produce, producerGatewayWebSocket.gatewayId, (message) => { webview.postMessage(message); });
+
+    messenger.connect(producerGatewayWebSocket.websocketBaseUrl, this.webSocketTimeoutMs).then(() => {
+      const record = new Record(message.headers, message.key, message.text);
+
+      Logger.debug("Sending message to gateway");
+      Logger.debug(record);
+
+      messenger.sendMessageToGateway(record, message.sendTimeoutMs);
+      Logger.debug(`Successfully sent message to gateway ${message.gatewayId}`);
+    }).catch((error: any) => {
+      Logger.warn(`Error connecting to gateway with URL ${producerGatewayWebSocket.websocketBaseUrl}`);
+      Logger.warn(error);
+      const webViewMessage = new ToWebviewMessage(ToWebviewMessageCommandEnum.error, "errored - " + error.message, message.gatewayId);
+      messenger.postMessageToWebview(webViewMessage);
+    }).finally(() => {
+      messenger.dispose();
+    });
+  }
+
+  private connectMessengers(webview: vscode.Webview, documentContent: GatewayMessageDocumentContent): void {
+    Logger.debug("Connecting messengers");
+    const socketConnectPromises: Promise<void>[] = [];
+
+    documentContent.consumerGatewayWebSockets.forEach((consumerGatewayWebSocket) => {
+      GatewayMessenger.addGatewaySearchParams(consumerGatewayWebSocket.websocketBaseUrl);
+      consumerGatewayWebSocket.websocketBaseUrl.searchParams.set('option:position', 'latest');
+
+      const messenger = new GatewayMessenger(GatewayTypeEnum.consume, consumerGatewayWebSocket.gatewayId, (message) => { webview.postMessage(message); });
+
+      socketConnectPromises.push(messenger.connect(consumerGatewayWebSocket.websocketBaseUrl, this.webSocketTimeoutMs).then(() => {
+        this.messengers.push(messenger);
+      }));
+    });
+
+    Promise.all(socketConnectPromises).then(() => {
+    }).catch((error: any) => {
+      Logger.warn("Error connecting to gateway", error);
+      const webviewMessage = new ToWebviewMessage(ToWebviewMessageCommandEnum.error, "errored - " + error.message);
+      webview.postMessage(webviewMessage);
+    });
+  }
+
+  private refreshMessengerState(webview: vscode.Webview, postMessageCache:boolean = true): void {
+    Logger.debug("Refreshing messenger state");
+    this.messengers.forEach((messenger) => {
+      let webViewMessage: ToWebviewMessage | undefined = undefined;
+
+      switch (messenger.connectionState) {
+        case WebSocket.OPEN:
+          webViewMessage = new ToWebviewMessage(ToWebviewMessageCommandEnum.connection, "opened", messenger.gatewayId);
+          break;
+        case WebSocket.CONNECTING:
+          webViewMessage = new ToWebviewMessage(ToWebviewMessageCommandEnum.connection, "connecting", messenger.gatewayId);
+          break;
+        case WebSocket.CLOSING:
+          webViewMessage = new ToWebviewMessage(ToWebviewMessageCommandEnum.connection, "closing", messenger.gatewayId);
+          break;
+        case WebSocket.CLOSED:
+          webViewMessage = new ToWebviewMessage(ToWebviewMessageCommandEnum.connection, "closed", messenger.gatewayId);
+          break;
+      }
+
+      if (webViewMessage !== undefined) {
+        messenger.postMessageToWebview(webViewMessage);
+      }
+
+      if(postMessageCache) {
+        messenger.messages.forEach((message) => {
+          webview.postMessage(message);
+        });
+      }
+    });
+  }
+
+  private buildView(panel: vscode.WebviewPanel, displayTitle: string, producerGateways: IGateway[], consumerGateways: IGateway[], agents: AgentConfiguration[]): void {
+    const gatewayIndexPathOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'scripts', 'gateway', 'index.js');
+    const gatewayIndexUri = panel.webview.asWebviewUri(gatewayIndexPathOnDisk);
+    const listMinPathOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'scripts', 'libs', 'list.min.js');
+    const listMinUri = panel.webview.asWebviewUri(listMinPathOnDisk);
+    const bootstrapJsOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'scripts', 'libs', 'bootstrap.bundle.min.js');
+    const bootstrapJsUri = panel.webview.asWebviewUri(bootstrapJsOnDisk);
+    const stylePath = vscode.Uri.joinPath(this.context.extensionUri, 'styles', 'bootstrap.min.css');
+    const stylesUri = panel.webview.asWebviewUri(stylePath);
+    const htmlPath = vscode.Uri.joinPath(this.context.extensionUri, 'html', 'gatewayCustomEditor.html');
+
+    vscode.workspace.openTextDocument(htmlPath).then((htmlDoc) => {
+      let htmlDocText = htmlDoc.getText();
+      htmlDocText = htmlDocText.replace(/CSPSOURCE/g, panel.webview.cspSource)
+        .replace("STYLESURI", stylesUri.toString())
+        .replace("PRODUCERGATEWAYS", JSON.stringify(producerGateways))
+        .replace("CONSUMERGATEWAYS", JSON.stringify(consumerGateways))
+        .replace("AGENTS", JSON.stringify(agents))
+        .replace("BOOTSTRAPJSURI", bootstrapJsUri.toString())
+        .replace("LISTMINURI", listMinUri.toString())
+        .replace("GATEWAYINDEX", gatewayIndexUri.toString())
+        .replace("TITLE", displayTitle);
+
+      panel.webview.html = htmlDocText;
+    });
+  }
 
   public openCustomDocument(uri: vscode.Uri, openContext: vscode.CustomDocumentOpenContext, token: vscode.CancellationToken): Thenable<GatewayMessagesDocument> | GatewayMessagesDocument {
-    //Logger.info("Opening custom document");
     return GatewayMessagesDocument.create(uri, openContext.backupId); //let vscode catch errors
   }
 
-  public async resolveCustomEditor(gatewayMessagesDocument: GatewayMessagesDocument, webviewPanel: vscode.WebviewPanel, token: vscode.CancellationToken): Promise<void> {
-    const gatewayWebSockets: [gateway:Gateway, websocket:WebSocket][] = [];
-    //let webRequestArgs: ClientRequestArgs | undefined = undefined;
-
+  public resolveCustomEditor(gatewayMessagesDocument: GatewayMessagesDocument, webviewPanel: vscode.WebviewPanel, token: vscode.CancellationToken): void {
     webviewPanel.webview.options = {
       enableScripts: true,
       enableCommandUris: true
     };
 
-    webviewPanel.onDidDispose(async () => {
-      gatewayWebSockets.forEach(([gateway, webSocket]) => {
-        try{
-          Logger.info("Closing gateway socket " +  gateway.id);
-          webSocket.close(); // no matter what state the socket is in, attempt to close
-        }catch(e){
-          Logger.error('Closing sockets', e);
-        }
-      });
+    webviewPanel.onDidDispose(() => {
+      this.disposeMessengers();
+      gatewayMessagesDocument.dispose();
     });
 
-    token.onCancellationRequested(() => {
-      webviewPanel.dispose();
-    });
+    // webviewPanel.onDidChangeViewState(async () => {
+    //   webviewPanel.visible;
+    //   webviewPanel.active;
+    // });
 
+    token.onCancellationRequested(() => { webviewPanel.dispose(); });
 
-    webviewPanel.webview.onDidReceiveMessage((message) => {
-      // Logger.info("Received message");
-      // Logger.info(message);
-      switch(message.command){
-        case "ready":
-          if(gatewayWebSockets?.length > 0){
-            break; //The websocket is already open, most likely because the user moved the tab
-          }
+    webviewPanel.webview.onDidReceiveMessage((message: any) => { this.handleMessageFromWebview(webviewPanel.webview, gatewayMessagesDocument.content, message); });
 
-          gatewayMessagesDocument.content.gatewayWebSockets.forEach((gatewayWebSocket) => {
-            try{
-              const websocket = new WebSocket(gatewayWebSocket.webSocketUrl);
-
-              websocket.on("open", () => {
-                webviewPanel.webview.postMessage({command: "connection", text: "opened", gatewayId: gatewayWebSocket.gateway.id});
-              });
-
-
-              websocket.on("error", (err: any) => {
-                webviewPanel.webview.postMessage({command: "error", text: "errored - " + err, gatewayId: gatewayWebSocket.gateway.id});
-              });
-
-              websocket.on("close", (data: any) => {
-                try{
-                  webviewPanel.webview.postMessage({command: "connection", text: "closed", gatewayId: gatewayWebSocket.gateway.id});
-                }catch{
-                  //no op because the webview may have been disposed
-                }
-              });
-
-              websocket.on("message", (data: any) => {
-                const message = data.toString();
-// Logger.info("Received message from gateway");
-// Logger.info(message);
-
-                const consumePushMessage = ConsumePushMessage.tryCast(message);
-                if(consumePushMessage !== undefined){
-                  //Logger.info("Received consume push message from gateway");
-                  webviewPanel?.webview?.postMessage({command: "consumeMessage", text: consumePushMessage, gatewayId: gatewayWebSocket.gateway.id, contentType: consumePushMessage.contentType()});
-                  return;
-                }
-
-                const produceResponse = ProduceResponse.tryCast(message);
-                if(produceResponse !== undefined){
-                  //Logger.info("Received produce response from gateway");
-                  webviewPanel?.webview?.postMessage({command: "produceResponse", text: produceResponse, gatewayId: gatewayWebSocket.gateway.id});
-                  return;
-                }
-
-                Logger.warn("Received unknown message from gateway");
-                Logger.warn(message);
-              });
-
-              gatewayWebSockets.push([gatewayWebSocket.gateway, websocket]);
-            }catch (e:any) {
-              webviewPanel.webview.postMessage({command: "error", text: "errored - " + e.message, gatewayId: gatewayWebSocket.gateway.id});
-            }
-          });
-          break;
-        case("userMessage"):
-          const gateway = gatewayWebSockets.find((gatewayWebSocket) => { return (gatewayWebSocket[0].id === message.gatewayId); });
-          if(gateway === undefined){
-            Logger.warn("Received message from unknown gateway: %o", message);
-            break;
-          }
-
-          Logger.info(`Sending message to gateway ${gateway[0].id}`);
-
-          const produceRequest = new ProduceRequest(null, message.text, null);
-
-          gateway[1].send(JSON.stringify(produceRequest), (err) => {
-            if(err){
-              Logger.warn("Error sending message to gateway", err);
-              webviewPanel.webview.postMessage({command: "error", text: "errored - " + err, gatewayId: gateway[0].id});
-              return;
-            }
-
-            const consumePushMessage = new ConsumePushMessage(new Record(null, null, message.text), "");
-            webviewPanel?.webview?.postMessage({command: "userMessage", text: consumePushMessage, gatewayId: gateway[0].id, contentType: consumePushMessage.contentType()});
-            Logger.info(`Successfully sent message to gateway ${gateway[0].id}`);
-          });
-
-          break;
-      }
-    });
-
-    webviewPanel.webview.html = this.buildView(webviewPanel,
+    this.buildView(webviewPanel,
       `${gatewayMessagesDocument.uri.path}`,
-      gatewayMessagesDocument.content.gatewayWebSockets,
+      gatewayMessagesDocument.content.producerGateways,
+      gatewayMessagesDocument.content.consumerGateways,
       gatewayMessagesDocument.content.agents);
   }
-
-  private buildView(panel: vscode.WebviewPanel, displayTitle:string, gatewayWebSockets: {gateway: Gateway, webSocketUrl: URL}[], agents:AgentConfiguration[]): string {
-    const gateMsgPathOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'scripts','gatewayMessages.js');
-    const gatewayMsgUri = panel.webview.asWebviewUri(gateMsgPathOnDisk);
-    const listMinPathOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'scripts','list.min.js');
-    const listMinUri = panel.webview.asWebviewUri(listMinPathOnDisk);
-    const msgMrgPathOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'scripts','messageManager.js');
-    const msgMrgUri = panel.webview.asWebviewUri(msgMrgPathOnDisk);
-    const bootstrapJsOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'scripts','bootstrap.bundle.min.js');
-    const bootstrapJsUri = panel.webview.asWebviewUri(bootstrapJsOnDisk);
-    const stylePath = vscode.Uri.joinPath(this.context.extensionUri, 'styles','bootstrap.min.css');
-    const stylesUri = panel.webview.asWebviewUri(stylePath);
-
-    return `
-    <!DOCTYPE html>
-    <html lang="en" data-bs-theme="dark">
-    <head>
-      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${panel.webview.cspSource}; img-src ${panel.webview.cspSource} https:; script-src 'unsafe-inline' ${panel.webview.cspSource};">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link href="${stylesUri}" rel="stylesheet">
-      <meta charset="UTF-8">
-      <title>${displayTitle}</title>
-      <style>
-        #messages-container {
-          height: 80%;
-          overflow: auto;
-          display: flex;
-          flex-direction: column-reverse;
-        }
-        ul.striped-list > li:nth-of-type(odd) > table > tbody > tr > td {
-            background-color: var(--vscode-input-background) ;
-        }
-        ul.striped-list > li:last-child {
-            border-bottom: none;
-        }
-      </style>
-      </head>
-      <body class="vsCodePulsarAdminWizard">
-        <div class="container-fluid" style="height: 97vh!important;">
-           <div class="row mb-2">
-             <div class="col-12">
-                <div class="alert alert-info d-none" role="alert" id="pageMessage"></div>
-                <div class="alert alert-danger d-none" role="alert" id="pageError"></div>
-             </div>
-          </div>
-          <div class="row h-100">
-            <div class="col-3 h-100">
-              <div class="row h-50">
-                <div class="col-12 pb-4 h-100">
-                <div class="card h-100">
-  <div class="card-header">Agents</div>
-  <div class="card-body overflow-scroll"><ul class="list-group striped-list" id="agents-list"></ul></div>
-</div>
-</div>
-              </div>
-              <div class="row h-50">
-                <div class="col-12 h-100">
-                <div class="card h-100">
-  <div class="card-header">Gateways</div>
-  <div class="card-body overflow-scroll"><ul id="gateways-list" class="list-group striped-list"></ul></div>
-</div>
-</div>
-              </div>
-            </div>
-            <div class="col-9 h-100">
-              <div class="" id="messages-container" style="height: 93%!important;">
-                <div class="col-12 overflow-y-scroll no-gutters bg-light-subtle border rounded h-100 p-2" id="messages-list" class="list-group"><div class="list"></div></div>
-              </div>
-              <div class="row mt-4">
-                <div class="col-12">
-                  <div class="input-group d-none" id="producer-message-form">
-                    <textarea class="form-control" aria-label="Message" id="message-text" aria-describedby="button-addon2" style="width: 59%!important;" onkeyup="enableButton()"></textarea>
-                    <select class="form-select" id="producer-gateway-id" aria-label="Choose gateway" style="width: 3%!important;" onchange="enableButton()">
-                      <option value="" selected>Choose...</option>
-                    </select>
-                    <button class="btn btn-outline-success" id="send-button" disabled type="button" onclick="sendUserMessage(document.getElementById('producer-gateway-id').value,document.getElementById('message-text').value)">Send</button>
-                  </div>
-                  <div class="" id="consume-only-form">
-                  (No produce gateways configured, watching for messages)
-                  </div>
-                </div>
-             </div>
-            </div>
-           </div>
-        </div>
-        <script type="text/javascript">
-          const gateways = ${ [ JSON.stringify(gatewayWebSockets.map((gatewayWebSocket) => { return gatewayWebSocket.gateway; })) ] };
-          const agents = ${ JSON.stringify(agents) };
-        </script>
-        <script src="${bootstrapJsUri}"></script>
-        <script src="${listMinUri}"></script>
-        <script src="${msgMrgUri}"></script>
-        <script src="${gatewayMsgUri}"></script>
-      </body>
-      </html>
-    `;
-  }
 }
 
-class ProduceRequest {
-  constructor(public readonly key: string | null,
-              public readonly value: string | null,
-              public readonly headers: string | null){}
+interface IFromWebviewMessage {
+  command: FromWebviewMessageCommandEnum;
+  text?: string;
+  gatewayId?: string;
+  headers?: { [key: string]: string; };
+  params?: { [key: string]: string; };
+  options?: { [key: string]: string; };
+  cred?: string;
+  key?: string;
+  sendTimeoutMs: number;
 }
 
-class ProduceResponse {
-  constructor(public readonly status: Status,
-              public readonly reason: string){}
-  public static tryCast(json: string): ProduceResponse | undefined {
-    try {
-      const a = JSON.parse(json);
-
-      if(a.status === undefined){
-        return undefined;
-      }
-
-      if(a.reason === undefined){
-        return undefined;
-      }
-
-      return new ProduceResponse(a.status, a.reason);
-    } catch {
-      return undefined;
-    }
-  }
+enum FromWebviewMessageCommandEnum {
+  setParamValue = "setParamValue",
+  setAuthToken = "setAuthToken",
+  ready = "ready",
+  userMessage = "userMessage"
 }
 
-enum Status {
-  OK = "OK",
-  BAD_REQUEST = "BAD_REQUEST",
-  PRODUCER_ERROR = "PRODUCER_ERROR",
-}
-
-class ConsumePushMessage {
-  constructor(public readonly record: Record, public readonly  offset:string){}
-  public static tryCast(json: string): ConsumePushMessage | undefined {
-    try{
-      const a = JSON.parse(json);
-
-      if(a.record === undefined){
-        return undefined;
-      }
-
-      if(a.offset === undefined){
-        return undefined;
-      }
-
-      return new ConsumePushMessage(a.record, a.offset);
-    }catch{
-      return undefined;
-    }
-  }
-
-  public contentType(): string | undefined {
-    if(this.record.value === undefined || this.record.value === null){
-      return undefined;
-    }
-
-    try{
-      JSON.parse(this.record.value);
-      return "application/json";
-    }catch {}
-
-    const htmlRegex = new RegExp(/(<(\/)?(html))/gi);
-
-    if (htmlRegex.test(this.record.value)) {
-      return "text/html";
-    }
-
-    return "text/plain";
-  }
-}
-
-class Record {
-  constructor(public readonly headers: Map<string,string> | null,
-              public readonly key: {} | null,
-              public readonly value: any){}
-}

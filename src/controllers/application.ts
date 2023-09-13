@@ -16,7 +16,6 @@ import * as Constants from "../common/constants";
 import GatewayCustomEditorProvider from "../providers/gatewayCustomEditor/gatewayCustomEditorProvider";
 import AppLogsCustomEditorProvider from "../providers/appLogsCustomEditor/appLogsCustomEditorProvider";
 import ExampleApplicationRegistry from "../common/exampleApplications/registry";
-import {IGatewayNode} from "../providers/controlPlaneTreeData/nodes/gateway";
 import {randomUUID} from "node:crypto";
 import TDeployableApplication from "../types/tDeployableApplication";
 import {TSavedControlPlane} from "../types/tSavedControlPlane";
@@ -26,6 +25,10 @@ import {gatherDirFiles} from "../utils/gatherDirFiles";
 import {TArtifactItem} from "../types/tArtifactItem";
 import {writeApplicationAsFiles} from "../utils/writeApplicationAsFiles";
 import WatchApplicationUpdateTask from "../services/watchApplicationUpdateTask";
+import randomNumberString from "../utils/randomNumberString";
+import WatchArtifactBuildTask from "../services/watchArtifactBuildTask";
+import {CancellationTokenSource} from "vscode";
+import {IAgentNode} from "../providers/controlPlaneTreeData/nodes/agent";
 
 export default class ApplicationController {
   public static async delete(applicationNode: IApplicationNode, controlPlaneTreeProvider: ControlPlaneTreeDataProvider): Promise<void> {
@@ -44,16 +47,18 @@ export default class ApplicationController {
     Logger.info(`Deleting application '${applicationId}'`);
 
     const promises:Promise<void>[] = [];
+    const abortController = new AbortController();
 
     promises.push(applicationService.delete(applicationNode.tenantName, applicationId));
-    promises.push(new ProgressRunner<ApplicationDescription>("Delete application").run(task));
+    promises.push(new ProgressRunner<ApplicationDescription>("Delete application").run(task, abortController.signal));
 
     Promise.all(promises).then(() => {
       //no op
     }).catch((e: any) => {
-      Logger.error('Deploy application', e);
+      Logger.error('Delete application', e);
       vscode.window.showErrorMessage(e.data?.detail ?? "An error occurred deleting, refer to the output view for more details");
     }).finally(() => {
+      abortController.abort();
       controlPlaneTreeProvider.refresh();
     });
   }
@@ -223,15 +228,23 @@ export default class ApplicationController {
     }
 
     // Build the artifact
-    try{
-      await this.gatherFilesAndBuildArtifact(deployableApplication, zipFileUri.fsPath, context.globalStorageUri.fsPath);
-    }catch (e:any){
+    const promises:Promise<void>[] = [];
+    const buildArtifactTask = new WatchArtifactBuildTask(zipFileUri.fsPath);
+    const abortController = new AbortController();
+
+    promises.push(this.gatherFilesAndBuildArtifact(deployableApplication, zipFileUri.fsPath, context.globalStorageUri.fsPath));
+    promises.push(new ProgressRunner<Uint8Array>("Build application artifact").run(buildArtifactTask, abortController.signal));
+
+    await Promise.race(promises).then((o) => {
+      abortController.abort();
+    }).catch((e: any) => {
+      Logger.error('Build artifact', e);
       this.cleanUpWorkspace(zipFileUri.fsPath);
       vscode.window.showErrorMessage(e.message);
-    }
+    });
 
+    promises.splice(0, promises.length); // Clear the promises array
     const applicationService = new ApplicationService(deployableApplication.controlPlane);
-    const promises:Promise<void>[] = [];
 
     // Deploy or update
     if(deployableApplication.applicationDescription === undefined){
@@ -250,11 +263,11 @@ export default class ApplicationController {
                                               zipFileUri.fsPath,
                                               deployableApplication.instancePath!,
                                               deployableApplication.secretsPath));
-      promises.push(new ProgressRunner<ApplicationDescription>("Deploy").run(watchDeployTask));
+      promises.push(new ProgressRunner<ApplicationDescription>("Deploy").run(watchDeployTask, abortController.signal));
     }else{
-      const applicationTreeNode = controlPlaneTreeProvider.getTreeItemByLabelAddress(
-        `${deployableApplication.controlPlane.name}/${deployableApplication.tenantName}/${<string>deployableApplication.applicationDescription["application-id"]}`
-      );
+      // const applicationTreeNode = controlPlaneTreeProvider.getTreeItemByLabelAddress(
+      //   `${deployableApplication.controlPlane.name}/${deployableApplication.tenantName}/${<string>deployableApplication.applicationDescription["application-id"]}`
+      // );
 
       const watchUpdateTask = new WatchApplicationUpdateTask(deployableApplication.controlPlane.name, deployableApplication.tenantName,
         <string>deployableApplication.applicationDescription["application-id"],
@@ -270,14 +283,13 @@ export default class ApplicationController {
                                               zipFileUri.fsPath,
                                               deployableApplication.instancePath!,
                                               deployableApplication.secretsPath));
-      promises.push(new ProgressRunner<ApplicationDescription>("Update").run(watchUpdateTask));
+      promises.push(new ProgressRunner<ApplicationDescription>("Update").run(watchUpdateTask, abortController.signal));
     }
 
     // Run all promises
-    Promise.all(promises).then(() => {
+    Promise.all(promises).then((o) => {
       //no op
     }).catch((e: any) => {
-      Logger.error('Deploy application', e);
       vscode.window.showErrorMessage(e.data?.detail ?? "An error occurred deploying, refer to the output view for more details");
       this.cleanUpWorkspace(zipFileUri.fsPath);
     }).finally(() => {
@@ -308,7 +320,8 @@ export default class ApplicationController {
   public static async openGatewayCustomEditor(applicationNode: IApplicationNode): Promise<void>  {
     const virtualFilePath = path.join(applicationNode.controlPlane.name,
       applicationNode.tenantName,
-      `${applicationNode.applicationId}.gateway.${Constants.LANGUAGE_NAME}`
+      randomNumberString(5),
+      `${applicationNode.applicationId}.gateway.${Constants.LANGUAGE_NAME}`,
     );
 
     const uri = vscode.Uri.from({
@@ -323,16 +336,20 @@ export default class ApplicationController {
     return new AppLogsCustomEditorProvider(context);
   }
 
-  public static async openAppLogsCustomEditor(applicationNode: IApplicationNode): Promise<void>  {
-    const virtualFilePath = path.join(applicationNode.controlPlane.name,
-      applicationNode.tenantName,
-      `${applicationNode.applicationId}.logs.${Constants.LANGUAGE_NAME}`
+  public static async openAgentLogsCustomEditor(agentNode: IAgentNode): Promise<void>  {
+    const virtualFilePath = path.join(agentNode.controlPlane.name,
+                                      agentNode.tenantName,
+                                      `${agentNode.applicationId}.logs.${Constants.LANGUAGE_NAME}`
     );
 
-    const uri = vscode.Uri.from({
+    let uri = vscode.Uri.from({
       scheme: 'untitled',
       path: virtualFilePath.toLowerCase()
     });
+
+    const workerIds = agentNode.agent.executor?.replicas?.map((replica) => replica.id).join(",");
+
+    uri = uri.with({query: `workerIds=${workerIds}`});
 
     vscode.commands.executeCommand('vscode.openWith', uri, Constants.APP_LOGS_CUSTOM_EDITOR_VIEW_TYPE);
   }

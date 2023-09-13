@@ -60,7 +60,7 @@ export type TObservableTask<T> = {
    * @param wasCancelled Boolean indicating if the task was cancelled by user
    * @param hasErrors Boolean indicating if errors occurred during the task run
    */
-  onFinish: (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean) => void;
+  onFinish: (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean, wasAborted: boolean) => void;
 
   /**
    * A function to call to determine if errors occurred during the task run

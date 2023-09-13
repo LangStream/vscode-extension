@@ -42,9 +42,16 @@ export default class AppLogsDocument implements vscode.CustomDocument {
       const tenantName = uriParts[1];
       const applicationId = uriParts[2].replace(`.logs.${Constants.LANGUAGE_NAME}`, '');
 
-      const newTopicContent = await AppLogsDocumentContent.build(controlPlaneName, tenantName, applicationId);
+      const workerIdsStr = uri.query.match(/(?<=(workerIds\=))(.*)/i);
 
-      return new AppLogsDocument(uri, newTopicContent);
+      let workerIds = undefined;
+      if(workerIdsStr !== null && workerIdsStr.length > 0) {
+        workerIds = workerIdsStr[0].split(',');
+      }
+
+      const docContent = await AppLogsDocumentContent.build(controlPlaneName, tenantName, applicationId, undefined, workerIds);
+
+      return new AppLogsDocument(uri, docContent);
     }
 
     // Otherwise parse the existing file's contents.

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'unsafe-inline' CSPSOURCE; img-src CSPSOURCE https: data:; script-src 'unsafe-inline' CSPSOURCE https://accounts.google.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="STYLESURI" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>TITLE</title>
+  <style>
+      #messages-container {
+          height: 80%;
+          overflow: auto;
+          display: flex;
+          flex-direction: column-reverse;
+      }
+
+      ul.striped-list > li:nth-of-type(odd) > table > tbody > tr > td {
+          background-color: var(--vscode-input-background);
+      }
+
+      ul.striped-list > li:last-child {
+          border-bottom: none;
+      }
+  </style>
+</head>
+<body class="vsCodePulsarAdminWizard">
+<div class="container-fluid" style="height: 97vh!important;">
+  <div class="row mb-2">
+    <div class="col-12">
+      <div class="alert alert-info d-none" role="alert" id="pageMessage"></div>
+      <div class="alert alert-danger d-none" role="alert" id="pageError"></div>
+    </div>
+  </div>
+  <div class="row h-100">
+    <div class="col-3 h-100">
+      <div class="row" style="height: 9%!important;min-height: 100px">
+        <div class="col-12 mb-4">
+          <div class="card h-100">
+            <div class="card-header">Send record</div>
+            <div class="card-body p-0">
+              <div class="input-group d-none" id="producer-message-form">
+                <select class="form-select" id="producer-gateway-id" aria-label="Choose gateway" onchange="">
+                  <option value="" selected>- Choose producer -</option>
+                </select>
+                <button class="btn btn-outline-success" id="show-create-record-button" disabled type="button" >Create...</button>
+              </div>
+              <div class="p-4" id="consume-only-form">
+                (No produce gateways configured, watching for records...)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="height: 45.5%!important;">
+        <div class="col-12 pb-4 h-100">
+          <div class="card h-100">
+            <div class="card-header">Agents</div>
+            <div class="card-body overflow-scroll">
+              <ul class="list-group striped-list" id="agents-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="height: 45.5%!important;">
+        <div class="col-12 h-100">
+          <div class="card h-100">
+            <div class="card-header">Consumer Gateways</div>
+            <div class="card-body overflow-scroll">
+              <ul id="gateways-list" class="list-group striped-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-9 h-100">
+      <div class="h-100" id="messages-container">
+        <div class="col-12 list-group overflow-y-scroll no-gutters bg-light-subtle border rounded h-100 p-2" id="messages-list">
+          <div class="list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="bootstrapModal" tabindex="-1" aria-labelledby="bootstrapModal" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <form class="needs-validation" novalidate id="bootstrap-form">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bootstrapModalLabel">Set session & auth</h5>
+        </div>
+        <div class="modal-body">
+          <div id="parameters-placeholder"></div>
+          <div id="authentications-placeholder"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary" id="bootstrap-button">Done</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="createRecordViewModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="createRecordViewModal" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <form class="needs-validation" novalidate id="create-record-form">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createRecordLabel">Send record to gateway</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Gateway -->
+          <div class="row mb-4">
+            <div class="col form-floating">
+              <input type="text" disabled required class="form-control" id="modal-producer-gateway-id">
+              <label for="modal-producer-gateway-id">Gateway Id</label>
+            </div>
+          </div>
+
+          <!-- Key -->
+          <div class="row mb-4">
+            <div class="col form-floating">
+              <input class="form-control" aria-label="modal-message-key" id="modal-message-key">
+              <label for="modal-message-key">Key</label>
+              <div class="invalid-feedback">Optional</div>
+            </div>
+          </div>
+
+          <!-- Headers Grid -->
+          <div class="row mb-4">
+            <div class="col">
+              <label for="headers-table" class="col-form-label text-muted fs-6">Headers</label>
+            </div>
+            <div class="col-12">
+              <table id="headers-table" class="table table-bordered table-responsive table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col" class="col-1">#</th>
+                    <th scope="col">Label</th>
+                    <th scope="col">Value</th>
+                    <th scope="col" class="col-1"><a class="btn btn-sm btn-success rounded" href="#" id="add-header-button">+</a></th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Value -->
+          <div class="row">
+            <div class="col-12 form-floating">
+              <textarea class="form-control" required aria-label="modal-message" id="modal-message-text" style=""></textarea>
+              <label for="modal-message-text">Value</label>
+              <div class="invalid-feedback">Required</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="#" data-bs-dismiss="modal">Close</a>
+          <button type="submit" class="btn btn-primary" id="modal-send-button">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Templates -->
+<div style="display:none;">
+  <div class="w-100 d-flex justify-content-start" id="list-item">
+    <div class="row m-2">
+      <div class="col-12 rounded-3 p-1 px-2 text-dark bg-light text-start">
+        <div class="row no-gutters">
+          <div class="col-12"><span class="text-muted">gateway:</span> <span class="gatewayId"></span></div>
+          <div class="col-12"><span class="text-muted">key:</span> <span class="recordKey"></span></div>
+          <div class="col-12"><span class="text-muted">headers:</span> <code class="headers"></code></div>
+          <div class="col-12 pt-2">
+            <a class="text-decoration-none collapseLink"
+               href="#"
+               data-bs-toggle="collapse"
+               data-bs-target="#coll"
+               aria-expanded="false"
+               aria-controls="coll">
+              <span class="payloadEllipse"></span>
+            </a>
+            <div class="collapse" id="coll">
+              <div class="card card-body" style="color: var(--vscode-foreground)"><pre><code class="payload"></code></pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="BOOTSTRAPJSURI"></script>
+<script src="LISTMINURI"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="text/javascript">
+  const producerGateways = PRODUCERGATEWAYS;
+  const consumerGateways = CONSUMERGATEWAYS;
+  const agents = AGENTS;
+</script>
+<script type="module" src="GATEWAYINDEX"></script>
+</body>
+</html>

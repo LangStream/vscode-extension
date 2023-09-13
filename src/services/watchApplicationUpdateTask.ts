@@ -35,7 +35,7 @@ export default class WatchApplicationUpdateTask implements TObservableTask<Appli
     return actionResult?.status?.status?.status === ApplicationLifecycleStatusStatusEnum.errorDeploying;
   }
 
-  onFinish(waitExpired: boolean, wasCancelled: boolean, hasErrors: boolean): void {
+  onFinish(waitExpired: boolean, wasCancelled: boolean, hasErrors: boolean, wasAborted: boolean): void {
     if(waitExpired){
       vscode.window.showInformationMessage(`Timeout waiting for status of application, ${this.viewLogsMarkdown.value} or ${this.viewOutputWindowMarkdown.value} for more details`);
       return;
@@ -46,8 +46,7 @@ export default class WatchApplicationUpdateTask implements TObservableTask<Appli
       return;
     }
 
-    if(wasCancelled){
-      vscode.window.showErrorMessage(`Deployment cancelled`);
+    if(wasCancelled || wasAborted){
       return;
     }
 
@@ -55,7 +54,7 @@ export default class WatchApplicationUpdateTask implements TObservableTask<Appli
   }
 
   onProgress(actionResult: ApplicationDescription | undefined): ProgressReport {
-    console.log("onProgress", actionResult);
+    //console.log("onProgress", actionResult);
     const increment = (100/(this.timeout/this.pollingInterval));
     this.progressCallBack();
 

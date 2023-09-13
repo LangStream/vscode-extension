@@ -2,7 +2,7 @@
   "name": "langstream",
   "displayName": "LangStream AI",
   "description": "Develop streaming generative AI applications with LangStream",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "DataStax",
   "engines": {
     "vscode": "^1.77.0"
@@ -48,6 +48,7 @@
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/object-hash": "^3.0.4",
     "@types/sinon": "^10.0.15",
     "@types/uuid": "^9.0.1",
     "@types/vscode": "^1.77.0",
@@ -64,6 +65,7 @@
     "fflate": "^0.8.0",
     "form-data": "^4.0.0",
     "mocha": "^10.2.0",
+    "object-hash": "^3.0.0",
     "sinon": "^15.1.0",
     "style-loader": "^3.3.2",
     "terser-webpack-plugin": "^5.3.9",
@@ -212,14 +214,14 @@
           "group": "0@3"
         },
         {
-          "command": "extension.langStreamOpenAppLogsEditor",
-          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application\\.*/i",
-          "group": "0@4"
-        },
-        {
           "command": "extension.langStreamRemoveApplication",
           "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.application\\.*/i",
           "group": "1@1"
+        },
+        {
+          "command": "extension.langStreamOpenAgentLogsEditor",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.agent/i",
+          "group": "0@1"
         }
       ]
     },
@@ -272,7 +274,7 @@
         "category": "LangStream"
       },
       {
-        "command": "extension.langStreamOpenAppLogsEditor",
+        "command": "extension.langStreamOpenAgentLogsEditor",
         "title": "Logs",
         "category": "LangStream"
       }

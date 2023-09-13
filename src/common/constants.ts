@@ -24,9 +24,9 @@ export const COMMAND_DEPLOY_APPLICATION = 'extension.langStreamDeployApplication
 export const COMMAND_UPDATE_APPLICATION = 'extension.langStreamUpdateApplication';
 export const COMMAND_VIEW_APPLICATION_DETAILS = 'extension.langStreamApplicationDetails';
 export const COMMAND_OPEN_GATEWAY_EDITOR = 'extension.langStreamOpenGatewayEditor';
-export const COMMAND_OPEN_APP_LOGS_EDITOR = 'extension.langStreamOpenAppLogsEditor';
 export const COMMAND_OPEN_APP_LOGS_FROM_DEPLOY = "extension.langStreamOpenAppLogsEditorFromDeploy";
 export const COMMAND_VIEW_OUTPUT_WINDOW = "extension.langStreamViewOutputWindow";
+export const COMMAND_OPEN_AGENT_LOGS_EDITOR = 'extension.langStreamOpenAgentLogsEditor';
 
 // PROVIDERS
 export const CONTROL_PLANE_TREE = 'extension.langStreamExplorer';

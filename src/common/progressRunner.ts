@@ -6,7 +6,7 @@ import {sleep} from "../utils/sleep";
 export default class ProgressRunner<T> {
   constructor(private readonly title: string) {}
 
-  public async run(observableTask: TObservableTask<T>): Promise<void> {
+  public async run(observableTask: TObservableTask<T>, abortSignal: AbortSignal): Promise<void> {
     const options: ProgressOptions = {
       location: ProgressLocation.Notification,
       title: this.title,
@@ -15,13 +15,13 @@ export default class ProgressRunner<T> {
 
     const a = window.withProgress(options,
       async (progress: Progress<ProgressReport>, token: CancellationToken) => {
-        return this.startRunner(progress, token, observableTask);
+        return this.startRunner(progress, token, observableTask, abortSignal);
       });
 
     await a; //block until the progress is complete
   }
 
-  private async startRunner(progress: Progress<ProgressReport>, token: CancellationToken, observableTask: TObservableTask<T>): Promise<void> {
+  private async startRunner(progress: Progress<ProgressReport>, token: CancellationToken, observableTask: TObservableTask<T>, abortSignal: AbortSignal): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
       let expired = false;
       let errorCnt = 0;
@@ -34,7 +34,7 @@ export default class ProgressRunner<T> {
 
       progress.report(observableTask.onProgress());
 
-      while(!expired && !token.isCancellationRequested){
+      while(!expired && !token.isCancellationRequested && !abortSignal.aborted){
         let actionResult: T | undefined;
 
         try{
@@ -64,7 +64,7 @@ export default class ProgressRunner<T> {
       }
 
       try{
-        observableTask.onFinish(expired, token.isCancellationRequested, hasErrors);
+        observableTask.onFinish(expired, token.isCancellationRequested, hasErrors, abortSignal.aborted);
       }catch (e) {
         console.log('Error in onFinish', e);
         reject(e);

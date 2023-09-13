@@ -20,7 +20,7 @@ This extension provides ways to interact with the LangStream API from within VSC
     - List application components (modules/pipelines/agents)
     - Delete application
     - Get application details
-    - Watch application logs
+    - Watch agent logs
     - Message with gateways
 - Gateway
     - List gateways

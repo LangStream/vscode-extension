@@ -29,7 +29,7 @@ export default class WatchApplicationDeletingTask implements TObservableTask<App
       increment = increment;
     };
   };
-  onFinish = (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean): void => {
+  onFinish = (waitExpired:boolean, wasCancelled: boolean, hasErrors: boolean, wasAborted: boolean): void => {
     if(waitExpired){
       window.showInformationMessage(`Timeout waiting for status of application ${this.tenantName}/${this.applicationId}`);
       return;
@@ -40,8 +40,7 @@ export default class WatchApplicationDeletingTask implements TObservableTask<App
       return;
     }
 
-    if(wasCancelled){
-      window.showErrorMessage(`Cancelled deleting application ${this.tenantName}/${this.applicationId}`);
+    if(wasCancelled || wasAborted){
       return;
     }
 

@@ -12,7 +12,8 @@ import ModuleTree, {IModuleNode} from "./nodes/module";
 import GatewayTree from "./nodes/gateway";
 import PipelineTree, {IPipelineNode} from "./nodes/pipeline";
 import AgentTree, {IAgentNode} from "./nodes/agent";
-import Logger from "../../common/logger";
+import {IModule} from "../../interfaces/iModule";
+import {IGateway} from "../../interfaces/iGateway";
 
 export default class ControlPlaneTreeDataProvider  implements vscode.TreeDataProvider<TAllExplorerNodeTypes> {
   private onDidChangeTreeDataEmitter: vscode.EventEmitter<TAllExplorerNodeTypes | undefined> = new vscode.EventEmitter<TAllExplorerNodeTypes | undefined>();
@@ -39,27 +40,27 @@ export default class ControlPlaneTreeDataProvider  implements vscode.TreeDataPro
 
         switch (folderNode.folderType) {
           case ExplorerFolderTypes.moduleFolder:
-            return await new ModuleTree().getChildren(folderNode.treeContents as lsModels.ModuleDefinition[]);
+            return await new ModuleTree(folderNode.controlPlane, folderNode.tenantName, folderNode.applicationId).getChildren(folderNode.treeContents as IModule[]);
           case ExplorerFolderTypes.gatewayFolder:
-            return await new GatewayTree(folderNode.controlPlane, folderNode.tenantName).getChildren(folderNode.treeContents as lsModels.Gateways);
+            return await new GatewayTree(folderNode.controlPlane, folderNode.tenantName).getChildren(folderNode.treeContents);
         }
         break;
       case Constants.CONTEXT_VALUES.module:
         const moduleNode = parent as IModuleNode;
-        return await new PipelineTree().getChildren(moduleNode);
+        return await new PipelineTree(moduleNode.controlPlane, moduleNode.tenantName, moduleNode.applicationId).getChildren(moduleNode);
     }
 
     if(parent.contextValue.indexOf(`${Constants.CONTEXT_VALUES.application}.`) > -1){
       const applicationNode = parent as IApplicationNode;
       return [
-        new FolderNode("Modules", ExplorerFolderTypes.moduleFolder, applicationNode.applicationDefinition.modules, applicationNode.controlPlane, applicationNode.tenantName),
-        new FolderNode("Gateways", ExplorerFolderTypes.gatewayFolder, applicationNode.applicationDefinition.gateways, applicationNode.controlPlane, applicationNode.tenantName ),
+        new FolderNode("Modules", ExplorerFolderTypes.moduleFolder, applicationNode.applicationDefinition.modules, applicationNode.controlPlane, applicationNode.tenantName, applicationNode.applicationId),
+        new FolderNode("Gateways", ExplorerFolderTypes.gatewayFolder, applicationNode.applicationDefinition.gateways, applicationNode.controlPlane, applicationNode.tenantName, applicationNode.applicationId),
       ];
     }
 
     if(parent.contextValue.indexOf(`${Constants.CONTEXT_VALUES.pipeline}.`) > -1){
       const pipelineNode = parent as IPipelineNode;
-      return await new AgentTree().getChildren(pipelineNode);
+      return await new AgentTree(pipelineNode.controlPlane, pipelineNode.tenantName, pipelineNode.applicationId).getChildren(pipelineNode);
     }
 
     return []; // the parent type is unknown

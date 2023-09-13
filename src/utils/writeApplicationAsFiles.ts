@@ -82,6 +82,7 @@ export function writeApplicationAsFiles(applicationFolder: string, application: 
 
   application.artifactFiles?.forEach((artifactFile) => {
     const artifactFullPath = path.join(applicationFolder, artifactFile.artifactFilePath);
+    //c:\\Users\\ddieruf\\source\\langstream-applications\\python-function\\python\\example.py
     fs.writeFileSync(artifactFullPath, artifactFile.srcCode, opts);
   });
 
