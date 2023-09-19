@@ -46,7 +46,8 @@ export class ApplicationNode extends vscode.TreeItem implements IApplicationNode
           dark: path.join(__dirname, "..", "images", "dark", "application-yellow.png")
         };
         break;
-      case "agentError":
+      case "replicaError":
+      case "executorError":
         this.iconPath = {
           light: path.join(__dirname, "..", "images", "light", "application-yellow.png"),
           dark: path.join(__dirname, "..", "images", "dark", "application-yellow.png")
@@ -63,17 +64,21 @@ export class ApplicationNode extends vscode.TreeItem implements IApplicationNode
   }
 
   private decideStatus(applicationStatus: lsModels.AgentStatusDescription | undefined): string {
-    // Start by using the overall status
-    let status = applicationStatus?.status?.status ?? "unknown";
+    let status:string|undefined = undefined;
 
     // Look at each executor and see if any of them are in error
     applicationStatus?.executors?.forEach((executor) => {
-      if(executor.status?.status === AgentLifecycleStatusStatusEnum.error) {
-        status = "agentError";
+      if(status !== undefined) { return; } //shortcut
+
+      const errorReplica = executor.replicas?.find((replica) => { return replica.status === AgentLifecycleStatusStatusEnum.error; });
+      status = errorReplica !== undefined ? "replicaError" : undefined;
+
+      if(errorReplica === undefined && executor.status?.status === AgentLifecycleStatusStatusEnum.error) {
+        status = "executorError";
       }
     });
 
-    return status;
+    return status ?? applicationStatus?.status?.status ?? "unknown";
   }
 }
 
@@ -109,12 +114,13 @@ export default class ApplicationTree {
       //Match pipeline agents to their executor
       application.modules?.forEach((module) => {
         module.pipelines?.forEach((pipeline) => {
-          pipeline.agents?.forEach((agent) => {
-            applicationDescription.status?.executors?.forEach((executor) => {
-              if(executor.id === agent.id) {
-                agent.executor = executor;
-              }
-            });
+          pipeline.executors = [];
+
+          applicationDescription.status?.executors?.forEach((executor) => {
+            const agentMatch = pipeline.agents?.find((agent) => { return agent.id === executor.id; });
+            if(agentMatch !== undefined) {
+              pipeline.executors?.push(executor);
+            }
           });
         });
       });

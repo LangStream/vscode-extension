@@ -43,4 +43,10 @@ export interface IPipeline {
    * @memberof Pipeline
    */
   'agents'?: IAgentConfiguration[];
+  /**
+   *
+   * @type {ExecutorDescription[]}
+   * @memberof Pipeline
+   */
+  executors?: models.ExecutorDescription[];
 }

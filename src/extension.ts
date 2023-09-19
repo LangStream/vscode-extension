@@ -15,7 +15,7 @@ import ExampleApplicationRegistry from "./common/exampleApplications/registry";
 import * as path from "path";
 import {IGatewayNode} from "./providers/controlPlaneTreeData/nodes/gateway";
 import TDeployableApplication from "./types/tDeployableApplication";
-import {IAgentNode} from "./providers/controlPlaneTreeData/nodes/agent";
+import {ICompositeAgentNode} from "./providers/controlPlaneTreeData/nodes/compositeAgent";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
 	Logger.info('Welcome to the LangStream extension. There are many wonderful things to see and click.');
@@ -53,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 		registerCommand(Constants.COMMAND_OPEN_GATEWAY_EDITOR, (explorerNode: IApplicationNode) => ApplicationController.openGatewayCustomEditor(explorerNode)),
 		registerCommand(Constants.COMMAND_OPEN_APP_LOGS_FROM_DEPLOY, ApplicationController.openAppLogsCustomEditorFromDeploy),
 		registerCommand(Constants.COMMAND_VIEW_OUTPUT_WINDOW, () => { vscode.window.createOutputChannel("AI Streams").show(); }),
-		registerCommand(Constants.COMMAND_OPEN_AGENT_LOGS_EDITOR, (explorerNode: IAgentNode) => ApplicationController.openAgentLogsCustomEditor(explorerNode)),
+		registerCommand(Constants.COMMAND_OPEN_AGENT_LOGS_EDITOR, (explorerNode: ICompositeAgentNode) => ApplicationController.openAgentLogsCustomEditor(explorerNode)),
 
 		//Telemetry.initialize(),
 	];
