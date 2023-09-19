@@ -24,6 +24,4 @@ window.addEventListener('load', () => {
   messenger.initialize();
 
   new LogListingView(messenger).initialize();
-
-  messenger.sendMessage("ready");
 });

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import AppLogsDocument from "./appLogsDocument";
 import Logger from "../../common/logger";
-import axios, {CancelTokenSource, CancelTokenStatic} from "axios";
+import axios, {CancelTokenSource} from "axios";
 import * as path from "path";
 import {sleep} from "../../utils/sleep";
 import AppLogsDocumentContent from "./appLogsDocumentContent";
@@ -10,16 +10,15 @@ import {ToWebviewMessageCommandEnum} from "../../types/tToWebviewMessage";
 import AppLogMessage from "./appLogMessage";
 
 export default class AppLogsCustomEditorProvider implements vscode.CustomReadonlyEditorProvider<AppLogsDocument> {
-  private cancellationToken: CancelTokenStatic | undefined;
   private readonly messageCache: AppLogMessage[];
-  private cancellationTokenSource: CancelTokenSource | undefined;
+  private cancellationTokenSource: CancelTokenSource | undefined = undefined;
 
   constructor(private readonly context: vscode.ExtensionContext) {
     this.messageCache = [];
   }
 
   private get isWindowRefresh(): boolean {
-    return (this.cancellationToken !== undefined);
+    return (this.cancellationTokenSource !== undefined);
   }
 
   private buildView(panel: vscode.WebviewPanel, displayTitle:string): void {
@@ -48,18 +47,17 @@ export default class AppLogsCustomEditorProvider implements vscode.CustomReadonl
 
   private handleMessageFromWebview(webview: vscode.Webview,
                                    documentContent: AppLogsDocumentContent,
-                                   message: any,
-                                   source: CancelTokenSource | undefined = undefined): void {
-    // Logger.info("Received message");
-    // Logger.info(message);
+                                   message: any): void {
+    Logger.info("Received message");
+    Logger.info(message);
 
     switch(message.command){
       case "connection":
         switch(message.text){
           case "close":
             Logger.info("Closing logs stream");
-            source?.cancel('Close stream');
-            source = undefined;
+            this.cancellationTokenSource?.cancel('Close stream');
+            this.cancellationTokenSource = undefined;
 
             webview.postMessage(new ToWebviewMessage(ToWebviewMessageCommandEnum.connection, "closed"));
             break;
@@ -136,7 +134,7 @@ export default class AppLogsCustomEditorProvider implements vscode.CustomReadonl
 
       // Block until the stream is closed
       while (!stream.complete && this.cancellationTokenSource !== undefined) {
-        await sleep(1000);
+        await sleep(2000);
       }
 
       webview?.postMessage(new ToWebviewMessage(ToWebviewMessageCommandEnum.connection, "closed"));
@@ -164,8 +162,6 @@ export default class AppLogsCustomEditorProvider implements vscode.CustomReadonl
   }
 
   public async resolveCustomEditor(appLogsDocument: AppLogsDocument, webviewPanel: vscode.WebviewPanel, token: vscode.CancellationToken): Promise<void> {
-    let source: CancelTokenSource | undefined = undefined;
-
     webviewPanel.webview.options = {
       enableScripts: true,
       enableCommandUris: true
@@ -173,8 +169,8 @@ export default class AppLogsCustomEditorProvider implements vscode.CustomReadonl
 
     webviewPanel.onDidDispose(async () => {
       Logger.info("Closing logs stream");
-      source?.cancel('Close stream');
-      source = undefined;
+      this.cancellationTokenSource?.cancel('Close stream');
+      this.cancellationTokenSource = undefined;
       appLogsDocument.dispose();
     });
 
@@ -182,7 +178,7 @@ export default class AppLogsCustomEditorProvider implements vscode.CustomReadonl
       webviewPanel.dispose();
     });
 
-    webviewPanel.webview.onDidReceiveMessage((message: any) => { this.handleMessageFromWebview(webviewPanel.webview, appLogsDocument.content, message, source); });
+    webviewPanel.webview.onDidReceiveMessage((message: any) => { this.handleMessageFromWebview(webviewPanel.webview, appLogsDocument.content, message); });
 
     this.buildView(webviewPanel, `${appLogsDocument.uri.path}`);
   }
