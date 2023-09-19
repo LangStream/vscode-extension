@@ -8,14 +8,27 @@ import Common from "./common.js";
 export default class LogsMessenger {
   messageManager;
   vscode = acquireVsCodeApi();
+  abortController;
 
   constructor(msgManager) {
+    this.abortController = new AbortController();
     this.messageManager = msgManager;
+  }
+  start(){
+    this.abortController = new AbortController();
+    this.initialize();
+  }
+  stop(){
+    this.abortController.abort();
   }
   initialize() {
     if (this.messageManager === undefined || this.messageManager === null) {
       this.messageManager = new MessageManager();
     }
+
+    const options = {
+      signal: this.abortController?.signal
+    };
 
     window.addEventListener('message', event => {
       try {
@@ -23,10 +36,9 @@ export default class LogsMessenger {
       } catch (err) {
         Common.showError(`Error handling message: ${err}`);
       }
-    });
+    }, options);
   }
   handleMessage(event) {
-    //console.log(event);
     const messageData = event.data; // The JSON data from the extension
 
     switch(messageData.command){
@@ -61,5 +73,7 @@ export default class LogsMessenger {
   sendMessage(command, text) {
     const message = { command: command, text: text};
     this.vscode.postMessage(message);
+
+    console.info(`[${command}] ${text}`);
   }
 }

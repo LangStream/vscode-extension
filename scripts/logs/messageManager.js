@@ -81,7 +81,7 @@ export default class MessageManager {
         break;
     }
 
-    //console.log(gatewayMessage);
+    //console.info(gatewayMessage);
 
     this._listJs.add(gatewayMessage);
     this.filter();
