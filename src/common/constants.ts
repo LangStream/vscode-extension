@@ -26,7 +26,7 @@ export const COMMAND_VIEW_APPLICATION_DETAILS = 'extension.langStreamApplication
 export const COMMAND_OPEN_GATEWAY_EDITOR = 'extension.langStreamOpenGatewayEditor';
 export const COMMAND_OPEN_APP_LOGS_FROM_DEPLOY = "extension.langStreamOpenAppLogsEditorFromDeploy";
 export const COMMAND_VIEW_OUTPUT_WINDOW = "extension.langStreamViewOutputWindow";
-export const COMMAND_OPEN_AGENT_LOGS_EDITOR = 'extension.langStreamOpenAgentLogsEditor';
+export const COMMAND_OPEN_AGENT_LOGS_EDITOR = 'extension.langStreamOpenCompositeAgentLogsEditor';
 
 // PROVIDERS
 export const CONTROL_PLANE_TREE = 'extension.langStreamExplorer';
@@ -40,7 +40,7 @@ export const CONTEXT_VALUES = {
   folder: 'langStream.folder',
   tenant: 'langStream.tenant',
   application: 'langStream.application',
-  agent: 'langStream.agent',
+  compositeAgent: 'langStream.compositeAgent',
   worker: 'langStream.worker',
   module: 'langStream.module',
   gateway: 'langStream.gateway',
@@ -50,8 +50,7 @@ export const CONTEXT_VALUES = {
 export enum ExplorerMessageTypes {
   noTenants,
   noApplications,
-  noAgents,
-  noWorkers,
+  noCompositeAgents,
   noModules,
   noGateways,
   noPipelines,

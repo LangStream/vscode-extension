@@ -21,11 +21,8 @@ export default class MessageNode extends vscode.TreeItem implements IMessageNode
       case ExplorerMessageTypes.noApplications:
         this.label = "(no applications)";
         break;
-      case ExplorerMessageTypes.noAgents:
+      case ExplorerMessageTypes.noCompositeAgents:
         this.label = "(no agents)";
-        break;
-      case ExplorerMessageTypes.noWorkers:
-        this.label = "(no workers)";
         break;
       case ExplorerMessageTypes.noModules:
         this.label = "(no modules)";

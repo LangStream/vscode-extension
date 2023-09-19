@@ -219,8 +219,8 @@
           "group": "1@1"
         },
         {
-          "command": "extension.langStreamOpenAgentLogsEditor",
-          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.agent/i",
+          "command": "extension.langStreamOpenCompositeAgentLogsEditor",
+          "when": "view == extension.langStreamExplorer && viewItem =~ /langStream\\.compositeAgent/i",
           "group": "0@1"
         }
       ]
@@ -274,7 +274,7 @@
         "category": "LangStream"
       },
       {
-        "command": "extension.langStreamOpenAgentLogsEditor",
+        "command": "extension.langStreamOpenCompositeAgentLogsEditor",
         "title": "Logs",
         "category": "LangStream"
       }

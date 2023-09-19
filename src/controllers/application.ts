@@ -28,7 +28,7 @@ import WatchApplicationUpdateTask from "../services/watchApplicationUpdateTask";
 import randomNumberString from "../utils/randomNumberString";
 import WatchArtifactBuildTask from "../services/watchArtifactBuildTask";
 import {CancellationTokenSource} from "vscode";
-import {IAgentNode} from "../providers/controlPlaneTreeData/nodes/agent";
+import {ICompositeAgentNode} from "../providers/controlPlaneTreeData/nodes/compositeAgent";
 
 export default class ApplicationController {
   public static async delete(applicationNode: IApplicationNode, controlPlaneTreeProvider: ControlPlaneTreeDataProvider): Promise<void> {
@@ -336,10 +336,10 @@ export default class ApplicationController {
     return new AppLogsCustomEditorProvider(context);
   }
 
-  public static async openAgentLogsCustomEditor(agentNode: IAgentNode): Promise<void>  {
-    const virtualFilePath = path.join(agentNode.controlPlane.name,
-                                      agentNode.tenantName,
-                                      `${agentNode.applicationId}.logs.${Constants.LANGUAGE_NAME}`
+  public static async openAgentLogsCustomEditor(compositeAgentNode: ICompositeAgentNode): Promise<void>  {
+    const virtualFilePath = path.join(compositeAgentNode.controlPlane.name,
+      compositeAgentNode.tenantName,
+                                      `${compositeAgentNode.applicationId}.logs.${Constants.LANGUAGE_NAME}`
     );
 
     let uri = vscode.Uri.from({
@@ -347,7 +347,7 @@ export default class ApplicationController {
       path: virtualFilePath.toLowerCase()
     });
 
-    const workerIds = agentNode.agent.executor?.replicas?.map((replica) => replica.id).join(",");
+    const workerIds = compositeAgentNode.executorDescription.replicas?.map((replica) => replica.id).join(",");
 
     uri = uri.with({query: `workerIds=${workerIds}`});
 

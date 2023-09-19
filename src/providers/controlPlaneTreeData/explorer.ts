@@ -1,19 +1,17 @@
 import * as vscode from "vscode";
 import {TAllExplorerNodeTypes} from "../../types/tAllExplorerNodeTypes";
 import * as Constants from "../../common/constants";
+import {ExplorerFolderTypes} from "../../common/constants";
 import ConfigurationProvider from "../configuration";
 import {ControlPlaneProviderTree, IControlPlaneNode} from "./nodes/controlPlane";
 import TenantTree, {ITenantNode} from "./nodes/tenant";
 import ApplicationTree, {IApplicationNode} from "./nodes/application";
 import FolderNode from "./nodes/folder";
-import {ExplorerFolderTypes} from "../../common/constants";
-import * as lsModels from "../../services/controlPlaneApi/gen/models";
 import ModuleTree, {IModuleNode} from "./nodes/module";
 import GatewayTree from "./nodes/gateway";
 import PipelineTree, {IPipelineNode} from "./nodes/pipeline";
-import AgentTree, {IAgentNode} from "./nodes/agent";
+import CompositeAgentTree from "./nodes/compositeAgent";
 import {IModule} from "../../interfaces/iModule";
-import {IGateway} from "../../interfaces/iGateway";
 
 export default class ControlPlaneTreeDataProvider  implements vscode.TreeDataProvider<TAllExplorerNodeTypes> {
   private onDidChangeTreeDataEmitter: vscode.EventEmitter<TAllExplorerNodeTypes | undefined> = new vscode.EventEmitter<TAllExplorerNodeTypes | undefined>();
@@ -60,7 +58,7 @@ export default class ControlPlaneTreeDataProvider  implements vscode.TreeDataPro
 
     if(parent.contextValue.indexOf(`${Constants.CONTEXT_VALUES.pipeline}.`) > -1){
       const pipelineNode = parent as IPipelineNode;
-      return await new AgentTree(pipelineNode.controlPlane, pipelineNode.tenantName, pipelineNode.applicationId).getChildren(pipelineNode);
+      return await new CompositeAgentTree(pipelineNode.controlPlane, pipelineNode.tenantName, pipelineNode.applicationId).getChildren(pipelineNode.executors);
     }
 
     return []; // the parent type is unknown
@@ -72,57 +70,6 @@ export default class ControlPlaneTreeDataProvider  implements vscode.TreeDataPro
 
   public refresh(node?: any): void {
     this.onDidChangeTreeDataEmitter.fire(node);
-  }
-
-  public async getTreeItemByLabelAddress(labelAddress: string): Promise<TAllExplorerNodeTypes | undefined> {
-    const labelAddresses:string[] = labelAddress.split("/");
-    const controlPlaneName = labelAddresses[0];
-    let tenantTreeNode: ITenantNode | undefined = undefined;
-    let applicationTreeNode: IApplicationNode | undefined = undefined;
-    let moduleTreeNode: IModuleNode | undefined = undefined;
-    let pipelineTreeNode: IPipelineNode | undefined = undefined;
-    let agentTreeNode: IAgentNode | undefined = undefined;
-
-    const controlPlaneTreeNodes = await this.getChildren(undefined);
-    const controlPlaneTreeNode = controlPlaneTreeNodes.find((controlPlaneTreeNode) => { return controlPlaneTreeNode.label === controlPlaneName; }) as IControlPlaneNode;
-
-    if(labelAddresses.length === 1){
-      return controlPlaneTreeNode;
-    }
-
-    let idx = 0;
-    let currentNode: TAllExplorerNodeTypes | undefined = undefined;
-    for(const labelAddress of labelAddresses){
-      switch (idx) {
-        case 1:
-          currentNode = tenantTreeNode = await this.findNode<ITenantNode>(controlPlaneTreeNode, labelAddress);
-          break;
-        case 2:
-          currentNode = applicationTreeNode = await this.findNode<IApplicationNode>(tenantTreeNode!, labelAddress);
-          break;
-        case 3:
-          currentNode = moduleTreeNode = await this.findNode<IModuleNode>(applicationTreeNode!, labelAddress);
-          break;
-        case 4:
-          currentNode = pipelineTreeNode = await this.findNode<IPipelineNode>(moduleTreeNode!, labelAddress);
-          break;
-        case 5:
-          currentNode = agentTreeNode = await this.findNode<IAgentNode>(pipelineTreeNode!, labelAddress);
-      }
-
-      if(labelAddresses.length === (idx+1)){
-        return currentNode;
-      }
-
-      idx++;
-    }
-
-    return undefined;
-  }
-
-  private async findNode<T>(node: TAllExplorerNodeTypes, label: string): Promise<T | undefined> {
-    const children = await this.getChildren(node);
-    return children.find((child) => child.label?.toString().toLowerCase() === label.toLowerCase()) as T | undefined;
   }
 }
 

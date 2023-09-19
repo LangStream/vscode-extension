@@ -54,10 +54,4 @@ export interface IAgentConfiguration {
    * @memberof AgentConfiguration
    */
   'errors'?: models.ErrorsSpec;
-  /**
-   *
-   * @type {ExecutorDescription}
-   * @memberof AgentConfiguration
-   */
-  executor?: models.ExecutorDescription;
 }

@@ -6,7 +6,7 @@ import {IFolderNode} from "../providers/controlPlaneTreeData/nodes/folder";
 import {IModuleNode} from "../providers/controlPlaneTreeData/nodes/module";
 import {IGatewayNode} from "../providers/controlPlaneTreeData/nodes/gateway";
 import {IPipelineNode} from "../providers/controlPlaneTreeData/nodes/pipeline";
-import {IAgentNode} from "../providers/controlPlaneTreeData/nodes/agent";
+import {ICompositeAgentNode} from "../providers/controlPlaneTreeData/nodes/compositeAgent";
 
 export type TAllExplorerNodeTypes =
   | IFolderNode
@@ -14,7 +14,7 @@ export type TAllExplorerNodeTypes =
   | IMessageNode
   | IControlPlaneNode
   | ITenantNode
-  | IAgentNode
+  | ICompositeAgentNode
   | IModuleNode
   | IGatewayNode
   | IPipelineNode;

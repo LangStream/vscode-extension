@@ -6,16 +6,18 @@ import {IErrorNode} from "./error";
 import {IModuleNode} from "./module";
 import {TSavedControlPlane} from "../../../types/tSavedControlPlane";
 import {IPipeline} from "../../../interfaces/iPipeline";
+import {ExecutorDescription} from "../../../services/controlPlaneApi/gen";
 
 export interface IPipelineNode extends vscode.TreeItem {
   readonly pipeline: IPipeline;
   readonly controlPlane: TSavedControlPlane;
   readonly tenantName: string;
   readonly applicationId: string;
+  readonly executors: ExecutorDescription[];
 }
 
 export class PipelineNode extends vscode.TreeItem implements IPipelineNode {
-  constructor(readonly pipeline: IPipeline, readonly controlPlane: TSavedControlPlane, readonly tenantName: string, readonly applicationId: string) {
+  constructor(readonly pipeline: IPipeline, readonly controlPlane: TSavedControlPlane, readonly tenantName: string, readonly applicationId: string, readonly executors: ExecutorDescription[]) {
     super("unknown", vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `Pipeline`;
     this.contextValue = `${Constants.CONTEXT_VALUES.pipeline}.${(pipeline.errors?.retries ?? 0) > 0 ? "errors" : "healthy"}`;
@@ -63,7 +65,7 @@ export default class PipelineTree {
     const pipelineNodes: (IPipelineNode|IErrorNode)[] = [];
 
     for(const pipeline of moduleNode.pipelines) {
-      pipelineNodes.push(new PipelineNode(pipeline, this.controlPlane, this.tenantName, this.applicationId));
+      pipelineNodes.push(new PipelineNode(pipeline, this.controlPlane, this.tenantName, this.applicationId, pipeline.executors ?? []));
     }
 
     return pipelineNodes;
