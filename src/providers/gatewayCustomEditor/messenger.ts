@@ -117,9 +117,7 @@ export default class GatewayMessenger<T extends GatewayTypeEnum> {
       handshakeTimeout: connectTimeoutMs,
     };
 
-    const timeout = setTimeout(() => {
-      throw new Error("Connect request timed out");
-    }, connectTimeoutMs);
+    Logger.debug(`Connecting to ${address}`);
 
     const ws = new WebSocket(address, clientOptions);
 
@@ -143,10 +141,8 @@ export default class GatewayMessenger<T extends GatewayTypeEnum> {
       }
     }
 
-    clearTimeout(timeout);
-
     if(ws.readyState === WebSocket.CLOSED){
-      throw new Error("Server did not allow connection");
+      throw new Error(`Server did not allow connection at address ${address}`);
     }
 
     this.webSocket = ws;
