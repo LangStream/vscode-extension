@@ -143,7 +143,9 @@ export default class GatewayCustomEditorProvider implements vscode.CustomReadonl
 
     Promise.all(socketConnectPromises).then(() => {
     }).catch((error: any) => {
-      Logger.warn("Error connecting to gateway", error);
+      Logger.warn("Error connecting to gateway");
+      Logger.warn(error);
+
       const webviewMessage = new ToWebviewMessage(ToWebviewMessageCommandEnum.error, "errored - " + error.message);
       webview.postMessage(webviewMessage);
     });

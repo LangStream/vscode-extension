@@ -63,8 +63,8 @@ export default class GatewayMessenger {
           break;
         }
 
-        document.getElementById(messageData.gatewayId).innerText = messageData.text;
-        document.getElementById(messageData.gatewayId).classList.remove("text-success", "text-warning", "text-error");
+        document.getElementById(messageData.gatewayId).innerText = messageData.text ?? "Unknown";
+        document.getElementById(messageData.gatewayId).classList.remove("text-success", "text-warning", "text-danger");
 
         switch (messageData.text) {
           case "connected":
@@ -75,7 +75,7 @@ export default class GatewayMessenger {
             document.getElementById(messageData.gatewayId).classList.add("text-warning");
             break;
           default:
-            document.getElementById(messageData.gatewayId).classList.add("text-error");
+            document.getElementById(messageData.gatewayId).classList.add("text-danger");
             break;
         }
         break;
