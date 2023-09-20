@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1]
+
+### Fixed
+- Logs stream socket connection was not being closed when the logs view was closed
+- Cleaned up gateway connection management
+
+### Changed
+- The log stream connection is now managed by the logs view, instead of the gateway messenger. When the stream is closed the event viewer is removed from window which is much easier on the eyes.
+- The environment tree new displays the CompositeAgents for a pipeline, instead of individual agents
+- Added links to the project home page in the READMEs
+
+Contributors: ddieruf
+
 ## [0.3.0]
 
 This version is a significant step forward for the extension. There a quite a few changes. It was tested using LangStream version 0.0.16.
