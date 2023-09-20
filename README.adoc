@@ -2,12 +2,14 @@ image::images/logo.png[]
 
 == LangStream AI extension for VSCode
 
-The LangStream project combines the intelligence of large language models (LLMs) with the agility of streaming processing, to create powerful processing applications. An application in LangStream can watch a message topic and process data through multiple steps to output some useful generative AI results.
+The https://langstream.ai[LangStream project] combines the intelligence of large language models (LLMs) with the agility of streaming processing, to create powerful processing applications. An application in LangStream can watch a message topic and process data through multiple steps to output some useful generative AI results.
 
 [TIP]
 Get started with the LangStream documentation https://docs.langstream.ai[here].
 
 This extension provides ways to interact with the LangStream API from within VSCode. It provides a simple way to create, update, and delete LangStream applications, modules, and pipeline agents. It also provides a way to view the status of your applications and message with its gateway.
+
+For more information on the LangStream API, visit the https://langstream.ai[project website].
 
 == Installing the extension
 
@@ -24,7 +26,7 @@ Visit the https://github.com/riptano/streaming-gen-ai-vscode[releases page^] to 
 For a quick guide on loading .vsix in VScode, https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix[read this^].
 ====
 
-Once installed you'll notice a new "AI" icon in the activity bar. Click it to activate the extension and see the option to save your control plane.
+Once installed you'll notice a new LangStream icon in the activity bar. Click it to activate the extension and see the option to save your environment.
 
 == Output for debugging
 
